@@ -1,134 +1,172 @@
-# 08 · Deploying to Namecheap Stellar (cPanel + Passenger)
+# 08 · Deploying to Namecheap (cPanel + Node.js)
 
-This is the click-by-click recipe to put the site online. Allow ~45 minutes the first time.
+Recipe for **local development builds** and **production** on Namecheap Stellar–style shared hosting (one Node.js app per domain; Next.js + Payload share one process).
 
-> **Heads-up:** Namecheap Stellar shared hosting only allows **one** Node.js app per domain. The site is built so Next.js + Payload CMS share the same Node process, which keeps you within that limit.
+**Recommended production path:** build on **GitHub Actions** (Linux), download the artifact ZIP, upload to cPanel. That avoids Windows symlink issues with `output: 'standalone'` and matches `next.config.ts` (`BUILD_STANDALONE=1`).
 
 ---
 
-## A. Build the project on your laptop
+## Prerequisites
 
-```bat
+| Item | Notes |
+|------|--------|
+| Node | **v20.20.2** (matches `package.json` `engines` and cPanel selector). |
+| Package manager | **pnpm** only (`pnpm-lock.yaml`). Do **not** use `npm install` in this repo. |
+| GitHub | Repo connected (e.g. `tedris94/fizam-table-water`) for Actions workflow. |
+
+Project files that matter for deploy:
+
+- `.github/workflows/namecheap-standalone-zip.yml` — CI bundle.
+- `scripts/package-namecheap-standalone.sh` — same steps as CI (Linux/WSL).
+- `scripts/namecheap-DEPLOY.txt` — copied into the artifact as `DEPLOY_NAMECHEAP.txt`.
+- Root `app.js` — **only** used if you deploy a **full tree** where `.next/standalone/server.js` still lives under `.next/standalone/`. The **CI flat ZIP** does **not** use `app.js`; use **`server.js`** as startup (see below).
+
+---
+
+## A. Local machine (daily dev)
+
+From the project root:
+
+```powershell
 cd C:\wamp64\www\fizam.ng
-node -v               :: must be v20.20.2
-npm install
-npm run build
+node -v                    # expect v20.20.2
+corepack enable
+corepack prepare pnpm@9.15.4 --activate
+pnpm install
+pnpm dev
 ```
 
-After this, you should have a folder called `.next/` with a `standalone/` subfolder inside.
+- **`.npmrc`** sets `confirm-modules-purge=false` so `pnpm install` does not hang on prompts.
+- If **`pnpm install`** fails with **`EPERM` / `unlink … .node`**: stop **`pnpm dev`** (and any other process using this folder), then remove `node_modules` and run `pnpm install` again.
 
----
+Normal production build (not standalone):
 
-## B. Prepare the upload bundle
-
-Copy these files/folders into a new folder named `fizam-upload/`:
-
-- `.next/standalone/` (everything inside)
-- `.next/static/` → **place at `fizam-upload/.next/static/`** (the standalone server expects this exact path)
-- `public/`
-- `data/` (with the empty `.gitkeep`, **not** your local development DB unless you want to migrate it)
-- `app.js`
-- `.htaccess`
-- `package.json`
-- `next.config.ts`
-- `node_modules/` *(skip if you will run `npm ci --omit=dev` on the server instead — usually faster to upload `node_modules`)*
-
-> The folder structure inside `fizam-upload` should look like:
->
-> ```
-> fizam-upload/
-> ├─ app.js
-> ├─ .htaccess
-> ├─ package.json
-> ├─ next.config.ts
-> ├─ public/
-> ├─ data/
-> ├─ node_modules/   (optional — see above)
-> └─ .next/
->    ├─ standalone/
->    │   └─ server.js
->    └─ static/
-> ```
-
----
-
-## C. Upload via cPanel File Manager
-
-1. Log into cPanel for fizam.ng.
-2. **File Manager → Web Root** (usually `public_html` or `home/CPANEL_USER/fizam`).
-3. Decide on the application directory. Recommended: `/home/CPANEL_USER/fizam` (above `public_html`).
-4. Upload `fizam-upload.zip` and extract it inside that directory.
-
-> Alternative: use FTP (FileZilla) — same destination.
-
----
-
-## D. Configure the Node.js app in cPanel
-
-1. cPanel → **Setup Node.js App → Create Application**.
-2. Fill in:
-
-   | Field                | Value                                                |
-   | -------------------- | ---------------------------------------------------- |
-   | Node.js version      | `20.20.2`                                            |
-   | Application mode     | `Production`                                         |
-   | Application root     | `fizam` (or wherever you uploaded)                   |
-   | Application URL      | `fizam.ng` (root domain)                             |
-   | Application startup file | `app.js`                                         |
-
-3. Click **Create**.
-4. In the same page, scroll to **Environment variables → ADD VARIABLE** and add every key from `.env.example` (use **live** Paystack keys & a strong `PAYLOAD_SECRET`).
-5. Click **Save**.
-6. Click **Run NPM Install** (only if you skipped uploading `node_modules`).
-7. Click **Restart**.
-
----
-
-## E. Point the public URL at the app
-
-Namecheap Stellar serves Node apps through Passenger. If the “Application URL” you chose is the root domain (`fizam.ng`), the app is already accessible.
-
-If you want a subdomain (e.g. `app.fizam.ng`), add it via cPanel → **Subdomains** before creating the Node app.
-
----
-
-## F. Get an SSL certificate
-
-1. cPanel → **SSL/TLS Status** → tick the domain → **Run AutoSSL**.
-2. Wait ~5 minutes.
-3. Edit `.htaccess` and uncomment the HTTPS redirect block.
-
----
-
-## G. First-run smoke test
-
-Visit (replace with your domain):
-
-- `https://fizam.ng` — the homepage should render.
-- `https://fizam.ng/admin` — Payload login screen.
-- `https://fizam.ng/diagnostics` — should show every required env var as **yes**.
-
-If `/admin` redirects you to first-user setup, create your real super-admin account here, then delete the demo accounts seeded by `npm run seed` if you uploaded a seeded DB.
-
----
-
-## H. Updating the site later
-
-Quick path:
-
-```bat
-:: locally
-git pull
-npm install
-npm run build
+```powershell
+pnpm run build
+pnpm start
 ```
 
-Re-upload only changed folders (`.next/standalone/`, `.next/static/`, and any new files in `public/`). Then in cPanel → **Setup Node.js App → Restart**.
+**Standalone on Windows** often fails without Developer Mode / symlink rights. For a local **standalone** bundle matching production, use **WSL**, **Linux**, or **GitHub Actions** (recommended).
 
-If you ran `npm install` locally with new packages, also re-upload `node_modules/` (or click **Run NPM Install** in cPanel).
+---
+
+## B. Production bundle — GitHub Actions (recommended)
+
+1. Push your branch to GitHub.
+2. **Actions** → **Namecheap standalone ZIP** → **Run workflow**.
+3. Optional input: **`NEXT_PUBLIC_SITE_URL`** (default `https://fizam.ng`, no trailing slash). This value is **baked into the client** at build time.
+4. When the run finishes, open it → **Artifacts** → download **`fizam-namecheap-standalone`**.
+5. Unzip the GitHub download once; inside you’ll find **`fizam-cpanel-upload.zip`**. That inner ZIP is what you upload to cPanel.
+
+Optional repo secret **`CI_BUILD_PAYLOAD_SECRET`**: used only during `next build`. If unset, CI generates a random value. **Always set a real `PAYLOAD_SECRET` in cPanel** for production (do not rely on the CI-only value).
+
+---
+
+## C. Production bundle — local (Linux or WSL only)
+
+Mirrors CI:
+
+```bash
+cd /path/to/fizam.ng
+corepack enable && corepack prepare pnpm@9.15.4 --activate
+pnpm install --frozen-lockfile
+export BUILD_STANDALONE=1
+export NEXT_PUBLIC_SITE_URL=https://fizam.ng   # no trailing slash
+export PAYLOAD_SECRET=$(openssl rand -hex 48)  # build-time only
+bash scripts/package-namecheap-standalone.sh
+(cd .next/standalone && zip -r ~/fizam-cpanel-upload.zip .)
+```
+
+Upload **`fizam-cpanel-upload.zip`** the same way as the Actions artifact.
+
+---
+
+## D. cPanel File Manager
+
+Example home path from hosting: **`/home/CPANEL_USER/fizam.ng`** (your user may differ).
+
+1. Open **File Manager** → your **application root** (the folder that will hold `server.js`).
+2. Upload **`fizam-cpanel-upload.zip`**.
+3. **Extract** here so **`server.js`** and **`package.json`** sit **directly** in that folder (not nested inside another folder).
+4. In **Terminal** (if available):
+
+   ```bash
+   mkdir -p data && chmod 775 data
+   ```
+
+   SQLite uses **`data/fizam.db`** by default (see `.env.example` / `DATABASE_URI`).
+
+---
+
+## E. cPanel → Setup Node.js App
+
+**Create** (or edit) the application:
+
+| Field | Value |
+|--------|--------|
+| Node.js version | **20.20.2** |
+| Application mode | **Production** |
+| Application root | Folder where you extracted the ZIP (e.g. `fizam.ng` or full path `/home/USER/fizam.ng`). |
+| Application URL | **`fizam.ng`**, path **empty** for site root. |
+| Application startup file | **`server.js`** ← Next standalone entry (flat artifact). |
+
+Do **not** set startup to **`app.js`** unless you intentionally deployed the **full repo layout** with `.next/standalone/server.js` still under `.next/standalone/` (Passenger `app.js` wrapper in repo root).
+
+Then **Environment variables** → add everything you need from **`.env.example`** (production values), especially:
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SITE_URL` | **`https://fizam.ng`** — Paystack callback base, links, Payload `serverURL`. Must match the live URL. |
+| `PAYLOAD_SECRET` | Long random secret (required). |
+| `PAYSTACK_SECRET_KEY` | Live or test secret from Paystack. |
+| `DATABASE_URI` | Optional; default file DB under `./data/fizam.db`. |
+| `SMTP_*`, `CONTACT_NOTIFY_EMAIL`, etc. | Optional; see `.env.example`. |
+
+**Save**, then **Restart** the Node application.
+
+---
+
+## F. SSL
+
+cPanel → **SSL/TLS Status** → run **AutoSSL** for the domain. Use **HTTPS** everywhere; align `NEXT_PUBLIC_SITE_URL` with `https://…`.
+
+---
+
+## G. Smoke tests
+
+After deploy:
+
+- **`https://fizam.ng`** — homepage.
+- **`https://fizam.ng/admin`** — Payload admin (create super-admin on first run if prompted).
+- **`https://fizam.ng/order`** — checkout (needs `PAYSTACK_SECRET_KEY` for payment init).
+
+**Diagnostics:** public **`/diagnostics`** redirects to **`/dashboard/diagnostics`** (super admin after login). Do not expect a public env checklist at `/diagnostics` anymore.
+
+---
+
+## H. Updates (redeploy)
+
+1. Merge/push to GitHub.
+2. Run **Namecheap standalone ZIP** again (or rebuild locally on Linux/WSL).
+3. Upload the new **`fizam-cpanel-upload.zip`**, extract **over** the app root (overwrite), **Restart** Node.
+
+Rebuild whenever you change **`NEXT_PUBLIC_*`** variables — they are inlined at build time.
 
 ---
 
 ## I. Backups
 
-Back up `data/fizam.db` **at least once a week**. cPanel → **JetBackup** or simply download via File Manager. Without this file you lose every product, order, and account.
+Download **`data/fizam.db`** regularly (File Manager or backup tool). Losing it loses CMS content, products, orders, and users.
+
+---
+
+## J. Troubleshooting
+
+| Symptom | Check |
+|---------|--------|
+| 502 / app won’t start | Startup file is **`server.js`** at app root; `node_modules` came with standalone; **Restart** after env changes. |
+| Paystack / wrong domain | `NEXT_PUBLIC_SITE_URL` exactly **`https://fizam.ng`** (rebuild if changed). |
+| SQLite errors | `data/` exists and is **writable** (`chmod 775 data`). |
+| Windows `pnpm install` EPERM | Stop dev server; delete `node_modules`; retry. |
+
+For a short copy-paste checklist inside the artifact, see **`DEPLOY_NAMECHEAP.txt`** after extracting the inner ZIP (generated from `scripts/namecheap-DEPLOY.txt` at build time).
