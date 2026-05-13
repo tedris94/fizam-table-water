@@ -33,13 +33,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Enable corepack (pnpm)
         run: corepack enable && corepack prepare pnpm@9.15.4 --activate
 
       - name: Use Node 20.20.2 + pnpm cache
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20.20.2'
           cache: 'pnpm'
@@ -67,7 +67,7 @@ jobs:
         run: (cd .next/standalone && zip -r "$GITHUB_WORKSPACE/fizam-cpanel-upload.zip" .)
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: fizam-namecheap-standalone
           path: fizam-cpanel-upload.zip
