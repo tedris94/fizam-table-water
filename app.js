@@ -1,8 +1,9 @@
 /**
  * Phusion Passenger entrypoint for Namecheap Stellar (cPanel "Setup Node.js App").
  *
- * After `npm run build` produces `.next/standalone/server.js`, copy that file's
- * runtime into this process. Passenger auto-loads `app.js` from the application root.
+ * After `pnpm run build` with standalone output, `.next/standalone/server.js` exists.
+ * Passenger auto-loads `app.js` from the application root when you use the legacy
+ * full-repo layout. Prefer the CI flat bundle + startup `server.js` (Node 24+).
  */
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production'

@@ -12,17 +12,19 @@ A single Next.js 15 application that powers **fizam.ng**:
 
 ## 🚀 Quickstart (Windows / WAMP)
 
-```bash
+```powershell
 cd C:\wamp64\www\fizam.ng
-node -v          # must be 20.20.2 (use nvm if needed)
+node -v          # must be v24.14.1+ (see .nvmrc; use nvm-windows if needed)
 copy .env.example .env
-notepad .env      # set PAYLOAD_SECRET, Paystack & SMTP keys
-npm install
-npm run seed     # creates SQLite db + demo users / products / jobs
-npm run dev      # http://localhost:3000
+notepad .env     # set PAYLOAD_SECRET, Paystack & SMTP keys
+corepack enable
+corepack prepare pnpm@9.15.4 --activate
+pnpm install
+pnpm run seed    # creates SQLite db + demo users / products / jobs
+pnpm dev         # http://localhost:3000
 ```
 
-Demo accounts seeded by `npm run seed`:
+Demo accounts seeded by `pnpm run seed`:
 
 | Role        | Email                    | Password |
 | ----------- | ------------------------ | -------- |
@@ -53,14 +55,14 @@ Open the [`docs/`](./docs) folder — read the files in order if you have never 
 
 ## 🛠 Scripts
 
-| Command                     | What it does                                                  |
-| --------------------------- | ------------------------------------------------------------- |
-| `npm run dev`               | Start Next.js + Payload in development.                       |
-| `npm run build`             | Production build (`output: standalone`).                      |
-| `npm start`                 | Run the built production server.                              |
-| `npm run seed`              | Seed SQLite with demo users, products, jobs, and globals.     |
-| `npm run generate:types`    | Regenerate `src/payload-types.ts` after collection changes.   |
-| `npm run generate:importmap`| Regenerate Payload admin import map.                          |
+| Command                      | What it does                                                  |
+| ---------------------------- | ------------------------------------------------------------- |
+| `pnpm dev`                   | Start Next.js + Payload in development.                       |
+| `pnpm run build`             | Production build (standalone when `BUILD_STANDALONE=1`).      |
+| `pnpm start`                 | Run the built production server.                              |
+| `pnpm run seed`              | Seed SQLite with demo users, products, jobs, and globals.     |
+| `pnpm run generate:types`    | Regenerate `src/payload-types.ts` after collection changes.   |
+| `pnpm run generate:importmap`| Regenerate Payload admin import map.                          |
 
 ---
 
@@ -80,7 +82,6 @@ See [`.env.example`](./.env.example) for the full list. The most important ones:
 
 See [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md) for click-by-click instructions. Short version:
 
-1. `npm run build` locally.
-2. Upload `.next/standalone/`, `.next/static/`, `public/`, `data/`, `node_modules/`, `app.js`, `.htaccess`, `package.json`, `next.config.ts`.
-3. cPanel → **Setup Node.js App** → Node 20.20.2 → startup file `app.js`.
-4. Add env vars in cPanel UI, click **Restart App**.
+1. Prefer **GitHub Actions → “Namecheap standalone ZIP”** (see `docs/08-DEPLOY-NAMECHEAP.md`).
+2. cPanel → **Setup Node.js App** → Node **24.14.1** → startup file **`server.js`** for the CI flat bundle (or `app.js` only for the legacy full-tree layout).
+3. Add env vars in cPanel UI, click **Restart App**.
