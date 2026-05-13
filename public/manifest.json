@@ -1,0 +1,35 @@
+{
+  "name": "Fizam Table Water — Order & Track Delivery",
+  "short_name": "Fizam Water",
+  "description": "Order quality-certified table water and track your deliveries in real-time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1f71",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "shopping", "food"],
+  "shortcuts": [
+    {
+      "name": "Order Water",
+      "short_name": "Order",
+      "description": "Place a new water order",
+      "url": "/order",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your orders and account",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

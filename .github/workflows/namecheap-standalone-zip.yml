@@ -1,0 +1,74 @@
+# Builds a Next.js "standalone" bundle on Linux, merges .next/static + public,
+# and uploads a ZIP you can extract into /home/.../fizam.ng on Namecheap.
+#
+# Trigger: Actions → "Namecheap standalone ZIP" → Run workflow
+#
+# Optional repo secret CI_BUILD_PAYLOAD_SECRET — used only at build time. If
+# unset, the workflow generates a random value (you must still set
+# PAYLOAD_SECRET in cPanel for production).
+
+name: Namecheap standalone ZIP
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_public_site_url:
+        description: 'NEXT_PUBLIC_SITE_URL (no trailing slash; baked into client)'
+        required: false
+        default: 'https://fizam.ng'
+        type: string
+
+concurrency:
+  group: namecheap-standalone-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    env:
+      BUILD_STANDALONE: '1'
+      NODE_OPTIONS: --no-deprecation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+      - name: Use Node 20.20.2 + pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.20.2'
+          cache: 'pnpm'
+
+      - name: Set NEXT_PUBLIC_SITE_URL
+        run: |
+          URL='${{ inputs.next_public_site_url }}'
+          if [ -z "$URL" ]; then URL='https://fizam.ng'; fi
+          echo "NEXT_PUBLIC_SITE_URL=$URL" >> "$GITHUB_ENV"
+
+      - name: Set build-time PAYLOAD_SECRET
+        env:
+          FROM_SECRET: ${{ secrets.CI_BUILD_PAYLOAD_SECRET }}
+        run: |
+          if [ -n "$FROM_SECRET" ]; then
+            echo "PAYLOAD_SECRET=$FROM_SECRET" >> "$GITHUB_ENV"
+          else
+            echo "PAYLOAD_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build standalone + merge assets
+        run: bash scripts/package-namecheap-standalone.sh
+
+      - name: Create flat ZIP for cPanel File Manager
+        run: (cd .next/standalone && zip -r "$GITHUB_WORKSPACE/fizam-cpanel-upload.zip" .)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fizam-namecheap-standalone
+          path: fizam-cpanel-upload.zip
+          retention-days: 21

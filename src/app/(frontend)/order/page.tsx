@@ -1,0 +1,34 @@
+import type { Metadata } from 'next'
+import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
+import { Footer } from '@/components/frontend/Footer'
+import { BackToTop } from '@/components/frontend/BackToTop'
+import { OrderCheckout } from '@/components/order/OrderCheckout'
+import { HashHighlighter } from '@/components/frontend/HashHighlighter'
+
+export const metadata: Metadata = {
+  title: 'Order — Fizam Table Water',
+}
+
+export const dynamic = 'force-dynamic'
+
+export default function OrderPage() {
+  return (
+    <>
+      <SimpleNavbar />
+      <div className="min-h-screen bg-gray-50 pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl text-[#1a1f71] mb-4">Order Fizam Water</h1>
+            <p className="text-xl text-gray-600">
+              Fresh, quality-certified water delivered to your doorstep
+            </p>
+          </div>
+          <OrderCheckout />
+        </div>
+      </div>
+      <Footer />
+      <BackToTop />
+      <HashHighlighter />
+    </>
+  )
+}
