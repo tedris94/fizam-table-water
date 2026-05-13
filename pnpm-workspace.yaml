@@ -1,3 +1,7 @@
+# Single-package repo; required so pnpm does not error with "packages field missing or empty".
+packages:
+  - '.'
+
 ignoredBuiltDependencies:
   - esbuild
 
