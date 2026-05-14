@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
-import { getMailer, sendMail } from '@/lib/email'
+import { getMailer, sendMail, defaultFromAddress } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -55,6 +55,9 @@ export async function GET(request: Request) {
     user: process.env.SMTP_USER ?? null,
     hasPassword: Boolean(process.env.SMTP_PASS?.trim()),
     from: process.env.SMTP_FROM ?? null,
+    fromDefaultResolved: defaultFromAddress(),
+    fromOrders: process.env.SMTP_FROM_ORDERS ?? null,
+    fromInternal: process.env.SMTP_FROM_INTERNAL ?? null,
     contactNotifyEmail: process.env.CONTACT_NOTIFY_EMAIL ?? null,
   }
 

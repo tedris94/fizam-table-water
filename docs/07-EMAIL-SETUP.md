@@ -39,9 +39,31 @@ SMTP_FROM="Fizam Table Water <noreply@fizam.ng>"
 
 CONTACT_NOTIFY_EMAIL=hello@fizam.ng
 HR_NOTIFY_EMAIL=hr@fizam.ng
+
+# Optional: different visible “From” per kind of email (still one SMTP login above).
+# SMTP_FROM_ORDERS="Fizam Sales <sales@fizam.ng>"      # → customers (order confirmation)
+# SMTP_FROM_INTERNAL="Fizam <noreply@fizam.ng>"       # → staff (contact + job alerts); falls back to SMTP_FROM
 ```
 
-Restart the app (`npm run dev` locally, or **Restart App** in cPanel).
+Restart the app (`pnpm dev` locally, or **Restart App** in cPanel).
+
+## 3b. Multiple addresses vs multiple mailboxes
+
+**What the app supports today**
+
+- **One SMTP login:** `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` (one mailbox password).
+- **Different visible senders** via:
+  - **`SMTP_FROM`** — default “From” for anything that does not use an override.
+  - **`SMTP_FROM_ORDERS`** — used for **order confirmation** emails to customers (e.g. sales@).
+  - **`SMTP_FROM_INTERNAL`** — used for **contact form** and **job application** notifications to your team (e.g. noreply@ or hello@).
+
+If you omit the two optional lines, everything uses `SMTP_FROM` (same as before).
+
+**Host requirement:** Many providers let one authenticated mailbox send mail **as other addresses on the same domain** (aliases / “send as”). If the server rejects `From: sales@…` while logged in as `noreply@…`, either create **sales@** and use it as `SMTP_USER`, or add the alias in cPanel **Email → Forwarders / Send mail as**.
+
+**True separate mailboxes** (different passwords, different SMTP users) need **either** a provider that exposes one SMTP relay for the whole domain **or** code with multiple transporters (e.g. `SMTP_ORDERS_USER` / `SMTP_ORDERS_PASS` …). That is not in the codebase yet; the three `SMTP_FROM_*` variables cover the usual “sales vs noreply” branding on one login.
+
+**Payload / password-reset email:** this repo does not yet wire a Payload-specific mailer. When you add it, configure that adapter to use your **noreply** (or transactional) identity there.
 
 ## 4. Test it
 
@@ -57,7 +79,7 @@ If the email never arrives:
 2. Some Namecheap plans block outgoing port 587 — try `SMTP_PORT=465 SMTP_SECURE=true`.
 3. Some hosts require enabling “Send email from this account” in cPanel’s Email Deliverability page (set up SPF + DKIM there too).
 
-## Optional: external provider
+## 5. Optional: external provider
 
 You can also use:
 

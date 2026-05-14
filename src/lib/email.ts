@@ -34,7 +34,9 @@ export function getMailer() {
   })
 }
 
-const fromAddress = () => process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@fizam.ng'
+/** Default “From” for SMTP when a send does not pass an override. */
+export const defaultFromAddress = () =>
+  process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || 'noreply@fizam.ng'
 
 /**
  * Split `CONTACT_NOTIFY_EMAIL` / `HR_NOTIFY_EMAIL` on commas or semicolons.
@@ -49,16 +51,24 @@ function normalizeRecipients(raw: string | undefined): string | null {
   return parts.length ? parts.join(', ') : null
 }
 
-export async function sendMail(opts: { to: string; subject: string; text: string; html?: string }) {
+export async function sendMail(opts: {
+  to: string
+  subject: string
+  text: string
+  html?: string
+  /** Optional From header (e.g. sales@ for orders). Falls back to `defaultFromAddress()`. */
+  from?: string
+}) {
   const transporter = getMailer()
   if (!transporter) {
     console.warn('[email] SMTP not configured — message skipped:', opts.subject)
     return { skipped: true as const }
   }
 
+  const { from: fromOverride, ...rest } = opts
   await transporter.sendMail({
-    from: fromAddress(),
-    ...opts,
+    from: fromOverride?.trim() || defaultFromAddress(),
+    ...rest,
   })
   return { skipped: false as const }
 }
@@ -74,7 +84,11 @@ export async function notifyContactLead(payload: {
     normalizeRecipients(process.env.CONTACT_NOTIFY_EMAIL) || normalizeRecipients(process.env.SMTP_USER)
   if (!adminEmail) return { skipped: true as const }
 
+  const internalFrom =
+    process.env.SMTP_FROM_INTERNAL?.trim() || process.env.SMTP_FROM?.trim() || undefined
+
   await sendMail({
+    from: internalFrom,
     to: adminEmail,
     subject: `[Fizam Website] Message from ${payload.name}`,
     text: [
@@ -100,7 +114,11 @@ export async function notifyNewApplication(payload: {
     normalizeRecipients(process.env.SMTP_USER)
   if (!hrEmail) return
 
+  const internalFrom =
+    process.env.SMTP_FROM_INTERNAL?.trim() || process.env.SMTP_FROM?.trim() || undefined
+
   await sendMail({
+    from: internalFrom,
     to: hrEmail,
     subject: `[Fizam Careers] Application — ${payload.jobTitle}`,
     text: `${payload.applicantName} applied for "${payload.jobTitle}" (${payload.email}).`,
@@ -114,7 +132,11 @@ export async function sendOrderConfirmation(payload: {
   total: number
   reference?: string | null
 }) {
+  const ordersFrom =
+    process.env.SMTP_FROM_ORDERS?.trim() || process.env.SMTP_FROM?.trim() || undefined
+
   await sendMail({
+    from: ordersFrom,
     to: payload.to,
     subject: `Fizam — Order confirmation #${payload.orderId}`,
     text: [
