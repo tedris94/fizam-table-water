@@ -2,9 +2,9 @@
 
 You only need these once, before running the project. Skip any step that you already have.
 
-## 1. Install Node.js 24.14.1 (or newer 24.x)
+## 1. Install Node.js 24.15.0 (or any 24.x in `package.json` engines)
 
-The project targets **Node 24 LTS** (see `package.json` → `engines` and `.nvmrc`). **24.14.1** matches Namecheap’s cPanel selector and GitHub Actions.
+The project uses **Node 24** (see `package.json` → `engines` and `.nvmrc`). **24.15.0** matches Namecheap’s current cPanel option and GitHub Actions.
 
 ### Easiest way (Windows): use `nvm-windows`
 
@@ -13,17 +13,17 @@ The project targets **Node 24 LTS** (see `package.json` → `engines` and `.nvmr
 3. Open a new **Command Prompt** as Administrator and run:
 
    ```bat
-   nvm install 24.14.1
-   nvm use 24.14.1
+   nvm install 24.15.0
+   nvm use 24.15.0
    node -v
    ```
 
-   You should see `v24.14.1`.
+   You should see `v24.15.0`.
 
 ### Without nvm
 
 Download the Windows installer from  
-https://nodejs.org/dist/v24.14.1/node-v24.14.1-x64.msi  
+https://nodejs.org/dist/v24.15.0/node-v24.15.0-x64.msi  
 run it, then verify with `node -v`.
 
 ## 2. Install Git (recommended)
@@ -44,7 +44,7 @@ https://code.visualstudio.com — free editor. After installing, open it once an
 Open Command Prompt (or PowerShell) and run:
 
 ```bat
-node -v       :: prints v24.14.1 (or another 24.x that satisfies engines)
+node -v       :: prints v24.15.0 (or another 24.x that satisfies engines)
 npm -v        :: prints 10.x.x
 git --version :: prints git version 2.x
 ```

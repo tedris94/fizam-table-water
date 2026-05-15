@@ -14,7 +14,7 @@ A single Next.js 15 application that powers **fizam.ng**:
 
 ```powershell
 cd C:\wamp64\www\fizam.ng
-node -v          # must be v24.14.1+ (see .nvmrc; use nvm-windows if needed)
+node -v          # must match .nvmrc (v24.15.0) or any supported 24.x
 copy .env.example .env
 notepad .env     # set PAYLOAD_SECRET, Paystack & SMTP keys
 corepack enable
@@ -83,5 +83,5 @@ See [`.env.example`](./.env.example) for the full list. The most important ones:
 See [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md) for click-by-click instructions. Short version:
 
 1. Prefer **GitHub Actions → “Namecheap standalone ZIP”** (see `docs/08-DEPLOY-NAMECHEAP.md`).
-2. cPanel → **Setup Node.js App** → Node **24.14.1** → startup file **`server.js`** for the CI flat bundle (or `app.js` only for the legacy full-tree layout).
+2. cPanel → **Setup Node.js App** → Node **24.15.0** (or latest **24.x** offered) → startup file **`server.js`** for the CI flat bundle (or `app.js` only for the legacy full-tree layout).
 3. Add env vars in cPanel UI, click **Restart App**.

@@ -10,11 +10,11 @@ Recipe for **local development builds** and **production** on Namecheap Stellar�
 
 | Item | Notes |
 |------|--------|
-| Node | **v24.14.1+** (matches `package.json` `engines`, `.nvmrc`, cPanel selector, and CI). |
+| Node | **v24.x** — pinned in `.nvmrc` / CI to match cPanel (e.g. **24.15.0** when Namecheap offers it). |
 | Package manager | **pnpm** only (`pnpm-lock.yaml`). Do **not** use `npm install` in this repo. |
 | GitHub | Repo connected (e.g. `tedris94/fizam-table-water`) for Actions workflow. |
 
-**Why does cPanel show Node 14 as “recommended”?** That is a **legacy default** on many shared hosts so very old apps keep working. It is **not** advice for a modern Next.js 15 app. Use **Node 24.14.1** (or another 24.x offered) so you stay close to current runtimes and match CI.
+**Why does cPanel show Node 14 as “recommended”?** That is a **legacy default** on many shared hosts so very old apps keep working. It is **not** advice for a modern Next.js 15 app. Pick the **latest Node 24.x** your host lists (e.g. **24.15.0**) — same as `.nvmrc` and GitHub Actions.
 
 Project files that matter for deploy:
 
@@ -31,7 +31,7 @@ From the project root:
 
 ```powershell
 cd C:\wamp64\www\fizam.ng
-node -v                    # expect v24.14.1 (see .nvmrc)
+node -v                    # expect same as .nvmrc (e.g. v24.15.0)
 corepack enable
 corepack prepare pnpm@9.15.4 --activate
 pnpm install
@@ -106,7 +106,7 @@ Example home path from hosting: **`/home/CPANEL_USER/fizam.ng`** (your user may 
 
 | Field | Value |
 |--------|--------|
-| Node.js version | **24.14.1** (or latest **24.x** your host lists) |
+| Node.js version | Same as **.nvmrc** / CI (e.g. **24.15.0**) — or any **24.x** that satisfies `engines` |
 | Application mode | **Production** |
 | Application root | Folder where you extracted the ZIP (e.g. `fizam.ng` or full path `/home/USER/fizam.ng`). |
 | Application URL | **`fizam.ng`**, path **empty** for site root. |
