@@ -29,12 +29,14 @@ fi
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
 # pnpm + Next file tracing often omit nested runtime deps. Copy everything next/package.json lists.
+# Resolve from next's install tree (not project root) — pnpm does not hoist @next/env, @swc/helpers, etc.
 resolve_pkg_dir() {
   local pkg="$1"
   node -e "
     const path = require('path');
     const { createRequire } = require('module');
-    const req = createRequire(path.join(process.cwd(), 'package.json'));
+    const nextPkg = require.resolve('next/package.json');
+    const req = createRequire(nextPkg);
     const dir = path.dirname(req.resolve(process.argv[1] + '/package.json'));
     process.stdout.write(dir);
   " "$pkg"
