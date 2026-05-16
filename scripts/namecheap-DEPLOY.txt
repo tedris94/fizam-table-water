@@ -9,6 +9,9 @@ ZIP contents are meant to be extracted into your application root, e.g.
   /home/<user>/fizam.ng
 so that server.js and package.json sit directly in that folder.
 
+Before extracting a new ZIP over an old deploy, delete node_modules/ (and .next/ if
+present) in that folder so incomplete modules from a previous upload are not kept.
+
 cPanel → Setup Node.js App
 --------------------------
   Application root:     fizam.ng   (or full path /home/<user>/fizam.ng)

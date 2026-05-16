@@ -28,4 +28,25 @@ fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
+# Next boot resolves styled-jsx/package.json; pnpm + file tracing often omit it from standalone.
+ensure_standalone_dep() {
+  local pkg="$1"
+  local src="node_modules/${pkg}"
+  local dest=".next/standalone/node_modules/${pkg}"
+  if [[ ! -e "$src" ]]; then
+    echo "error: ${src} missing — run pnpm install" >&2
+    exit 1
+  fi
+  mkdir -p .next/standalone/node_modules
+  rm -rf "$dest"
+  cp -rL "$src" "$dest"
+}
+
+ensure_standalone_dep styled-jsx
+
+if [[ ! -f .next/standalone/node_modules/styled-jsx/package.json ]]; then
+  echo "error: styled-jsx not present in standalone node_modules" >&2
+  exit 1
+fi
+
 echo "OK: bundle ready under .next/standalone (see DEPLOY_NAMECHEAP.txt inside)"

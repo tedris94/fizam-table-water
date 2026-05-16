@@ -150,7 +150,7 @@ After deploy:
 
 1. Merge/push to GitHub.
 2. Run **Namecheap standalone ZIP** again (or rebuild locally on Linux/WSL).
-3. Upload the new **`fizam-cpanel-upload.zip`**, extract **over** the app root (overwrite), **Restart** Node.
+3. Upload the new **`fizam-cpanel-upload.zip`**. Before extract, **delete** the old **`node_modules`** folder (and **`.next`** if present) in the app root so stale files are not left behind — then extract, **Restart** Node.
 
 Rebuild whenever you change **`NEXT_PUBLIC_*`** variables — they are inlined at build time.
 
