@@ -63,9 +63,6 @@ jobs:
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 
-      - name: Verify styled-jsx in standalone bundle
-        run: test -f .next/standalone/node_modules/styled-jsx/package.json
-
       - name: Create flat ZIP for cPanel File Manager
         run: (cd .next/standalone && zip -r "$GITHUB_WORKSPACE/fizam-cpanel-upload.zip" .)
 

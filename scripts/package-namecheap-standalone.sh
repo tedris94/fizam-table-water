@@ -28,25 +28,56 @@ fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
-# Next boot resolves styled-jsx/package.json; pnpm + file tracing often omit it from standalone.
-ensure_standalone_dep() {
+# pnpm + Next file tracing often omit nested runtime deps. Copy everything next/package.json lists.
+resolve_pkg_dir() {
   local pkg="$1"
-  local src="node_modules/${pkg}"
-  local dest=".next/standalone/node_modules/${pkg}"
-  if [[ ! -e "$src" ]]; then
-    echo "error: ${src} missing — run pnpm install" >&2
-    exit 1
-  fi
-  mkdir -p .next/standalone/node_modules
-  rm -rf "$dest"
-  cp -rL "$src" "$dest"
+  node -e "
+    const path = require('path');
+    const { createRequire } = require('module');
+    const req = createRequire(path.join(process.cwd(), 'package.json'));
+    const dir = path.dirname(req.resolve(process.argv[1] + '/package.json'));
+    process.stdout.write(dir);
+  " "$pkg"
 }
 
-ensure_standalone_dep styled-jsx
+ensure_standalone_dep() {
+  local pkg="$1"
+  local src dest
+  src="$(resolve_pkg_dir "$pkg")"
+  dest=".next/standalone/node_modules/${pkg}"
+  mkdir -p "$(dirname "$dest")"
+  rm -rf "$dest"
+  cp -rL "$src" "$dest"
+  echo "  + ${pkg}"
+}
 
-if [[ ! -f .next/standalone/node_modules/styled-jsx/package.json ]]; then
-  echo "error: styled-jsx not present in standalone node_modules" >&2
-  exit 1
-fi
+echo "Copying Next.js runtime dependencies into standalone node_modules..."
+while IFS= read -r dep; do
+  [[ -n "$dep" ]] || continue
+  ensure_standalone_dep "$dep"
+done < <(node -e "console.log(Object.keys(require('./node_modules/next/package.json').dependencies).join('\n'))")
+
+verify_standalone_dep() {
+  local pkg="$1"
+  if [[ ! -f ".next/standalone/node_modules/${pkg}/package.json" ]]; then
+    echo "error: ${pkg} not present in standalone node_modules" >&2
+    exit 1
+  fi
+}
+
+for dep in styled-jsx @swc/helpers @next/env; do
+  verify_standalone_dep "$dep"
+done
+
+echo "Verifying standalone can load Next runtime modules..."
+(
+  cd .next/standalone
+  node -e "
+    require('styled-jsx/package.json');
+    require('@swc/helpers/_/_interop_require_default');
+    require('@next/env');
+    console.log('runtime deps OK');
+  "
+)
 
 echo "OK: bundle ready under .next/standalone (see DEPLOY_NAMECHEAP.txt inside)"
