@@ -12,7 +12,15 @@ const dirname = path.dirname(__filename)
 const isStandaloneBuild = process.env.BUILD_STANDALONE === '1'
 
 const nextConfig: NextConfig = {
-  ...(isStandaloneBuild ? { output: 'standalone' as const } : {}),
+  ...(isStandaloneBuild
+    ? {
+        output: 'standalone' as const,
+        // Next resolves styled-jsx/package.json at boot; pnpm + standalone tracing can omit it.
+        outputFileTracingIncludes: {
+          '/*': ['./node_modules/styled-jsx/**/*'],
+        },
+      }
+    : {}),
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
