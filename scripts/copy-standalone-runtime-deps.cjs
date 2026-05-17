@@ -102,6 +102,10 @@ while (queue.length > 0) {
   for (const dep of Object.keys(pkg.dependencies || {})) {
     if (!copied.has(dep)) queue.push(dep)
   }
+  // libsql and similar packages need platform optional deps (e.g. @libsql/linux-x64-gnu).
+  for (const dep of Object.keys(pkg.optionalDependencies || {})) {
+    if (!copied.has(dep)) queue.push(dep)
+  }
 }
 
 console.log(`Copied ${count} packages into standalone node_modules`)
