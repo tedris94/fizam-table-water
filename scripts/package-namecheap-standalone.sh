@@ -39,11 +39,8 @@ cp package.json pnpm-lock.yaml "$DEPLOY_STAGING/"
   cat .npmrc 2>/dev/null || true
   echo "node-linker=hoisted"
 } > "${DEPLOY_STAGING}/.npmrc"
-(
-  cd "$DEPLOY_STAGING"
-  pnpm install --prod --frozen-lockfile
-)
-STAGING_NODE_MODULES="$(cd "$DEPLOY_STAGING" && pnpm root)"
+pnpm install --prod --frozen-lockfile --prefix "$DEPLOY_STAGING"
+STAGING_NODE_MODULES="$(pnpm --prefix "$DEPLOY_STAGING" root)"
 if [[ ! -d "$STAGING_NODE_MODULES" ]]; then
   echo "error: staging node_modules missing at ${STAGING_NODE_MODULES}" >&2
   exit 1
