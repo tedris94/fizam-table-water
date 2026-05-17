@@ -166,6 +166,7 @@ Download **`data/fizam.db`** regularly (File Manager or backup tool). Losing it 
 
 | Symptom | Check |
 |---------|--------|
+| 502 / Internal Server Error | Startup file **`server.js`** (not default `app.js` unless you ship the updated `app.js` wrapper). **`PAYLOAD_SECRET`** set in cPanel env. After deploy, `tail stderr.log` — if timestamp is old, Passenger is not running this folder. |
 | 502 / app won’t start | Startup file is **`server.js`** at app root; `node_modules` came with standalone; **Restart** after env changes. |
 | Paystack / wrong domain | `NEXT_PUBLIC_SITE_URL` exactly **`https://fizam.ng`** (rebuild if changed). |
 | SQLite errors | `data/` exists and is **writable** (`chmod 775 data`). |

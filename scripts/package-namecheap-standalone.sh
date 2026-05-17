@@ -28,17 +28,46 @@ fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
-# pnpm + Next file tracing often omit nested runtime deps. Copy everything next/package.json lists.
-# Resolve from next's install tree (not project root) — pnpm does not hoist @next/env, @swc/helpers, etc.
+# pnpm + file tracing omit nested runtime deps. Copy packages Next + Payload need at runtime.
 resolve_pkg_dir() {
   local pkg="$1"
   node -e "
+    const pkg = process.argv[1];
     const path = require('path');
+    const fs = require('fs');
     const { createRequire } = require('module');
-    const nextPkg = require.resolve('next/package.json');
-    const req = createRequire(nextPkg);
-    const dir = path.dirname(req.resolve(process.argv[1] + '/package.json'));
-    process.stdout.write(dir);
+    const anchors = [];
+    for (const name of ['next/package.json', 'payload/package.json', 'react-dom/package.json', '@payloadcms/db-sqlite/package.json']) {
+      try { anchors.push(require.resolve(name)); } catch {}
+    }
+    anchors.push(path.join(process.cwd(), 'package.json'));
+    const tryResolve = (request) => {
+      for (const anchor of anchors) {
+        try {
+          const req = createRequire(anchor);
+          return req.resolve(request);
+        } catch {}
+      }
+      throw new Error('Cannot resolve ' + request);
+    };
+    const toPkgRoot = (resolved) => {
+      let dir = path.dirname(resolved);
+      if (!resolved.endsWith('package.json') && path.basename(resolved) !== 'package.json') {
+        dir = path.dirname(resolved);
+      }
+      while (dir !== path.dirname(dir)) {
+        if (fs.existsSync(path.join(dir, 'package.json'))) return dir;
+        dir = path.dirname(dir);
+      }
+      throw new Error('No package root for ' + pkg);
+    };
+    let resolved;
+    try {
+      resolved = tryResolve(pkg + '/package.json');
+    } catch {
+      resolved = tryResolve(pkg);
+    }
+    process.stdout.write(toPkgRoot(resolved));
   " "$pkg"
 }
 
@@ -53,11 +82,48 @@ ensure_standalone_dep() {
   echo "  + ${pkg}"
 }
 
-echo "Copying Next.js runtime dependencies into standalone node_modules..."
+echo "Copying runtime dependencies into standalone node_modules..."
 while IFS= read -r dep; do
   [[ -n "$dep" ]] || continue
   ensure_standalone_dep "$dep"
-done < <(node -e "console.log(Object.keys(require('./node_modules/next/package.json').dependencies).join('\n'))")
+done < <(node -e "
+const path = require('path');
+const { createRequire } = require('module');
+const req = createRequire(path.join(process.cwd(), 'package.json'));
+const names = new Set();
+
+const addPkgJsonDeps = (pkgJsonPath) => {
+  const p = require(pkgJsonPath);
+  names.add(p.name);
+  for (const dep of Object.keys(p.dependencies || {})) names.add(dep);
+};
+
+for (const anchor of [
+  'next/package.json',
+  'payload/package.json',
+  '@payloadcms/db-sqlite/package.json',
+  '@payloadcms/next/package.json',
+]) {
+  try {
+    addPkgJsonDeps(req.resolve(anchor));
+  } catch {}
+}
+
+for (const name of [
+  'react',
+  'react-dom',
+  'graphql',
+  'sharp',
+  'libsql',
+  '@libsql/client',
+  'drizzle-orm',
+  '@payloadcms/drizzle',
+]) {
+  names.add(name);
+}
+
+console.log([...names].sort().join('\n'));
+")
 
 verify_standalone_dep() {
   local pkg="$1"
@@ -67,17 +133,19 @@ verify_standalone_dep() {
   fi
 }
 
-for dep in styled-jsx @swc/helpers @next/env; do
+for dep in styled-jsx @swc/helpers @next/env react-dom libsql '@libsql/client'; do
   verify_standalone_dep "$dep"
 done
 
-echo "Verifying standalone can load Next runtime modules..."
+echo "Verifying standalone can load runtime modules..."
 (
   cd .next/standalone
   node -e "
     require('styled-jsx/package.json');
     require('@swc/helpers/_/_interop_require_default');
     require('@next/env');
+    require('react-dom/server.browser');
+    require('libsql');
     console.log('runtime deps OK');
   "
 )

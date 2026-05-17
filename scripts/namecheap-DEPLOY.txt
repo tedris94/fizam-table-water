@@ -32,6 +32,12 @@ After first upload
   mkdir -p data && chmod 775 data
   Restart the Node.js application in cPanel.
 
+Extract via SSH (if File Manager extract is unclear):
+  cd ~/fizam.ng
+  rm -rf node_modules .next
+  unzip -o fizam-cpanel-upload.zip
+  ls -la server.js .next/BUILD_ID node_modules/react-dom/package.json
+
 Optional: run seed / create admin once via SSH from this directory:
   npx --yes tsx scripts/seed.ts
 (Requires uploading scripts + tsx or running from a dev machine against production DB — prefer one-time admin create via Payload if you skip seed.)
