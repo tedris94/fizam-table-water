@@ -28,12 +28,21 @@ fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
-# Standalone file tracing + pnpm symlinks omit many runtime deps. Merge a flat production
-# node_modules tree (--legacy = no symlinks, safe on cPanel).
-echo "Merging flat production node_modules into standalone..."
+# Standalone file tracing + pnpm symlinks omit many runtime deps. Install hoisted prod
+# deps in a staging dir and merge (flat node_modules, safe on cPanel).
+echo "Merging hoisted production node_modules into standalone..."
 DEPLOY_STAGING=".deploy-staging"
 rm -rf "$DEPLOY_STAGING"
-pnpm deploy --prod --legacy "$DEPLOY_STAGING"
+mkdir -p "$DEPLOY_STAGING"
+cp package.json pnpm-lock.yaml "$DEPLOY_STAGING/"
+{
+  cat .npmrc 2>/dev/null || true
+  echo "node-linker=hoisted"
+} > "${DEPLOY_STAGING}/.npmrc"
+(
+  cd "$DEPLOY_STAGING"
+  pnpm install --prod --frozen-lockfile
+)
 mkdir -p .next/standalone/node_modules
 rsync -a "${DEPLOY_STAGING}/node_modules/" .next/standalone/node_modules/
 rm -rf "$DEPLOY_STAGING"
