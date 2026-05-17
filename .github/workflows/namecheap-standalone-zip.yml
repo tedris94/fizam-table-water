@@ -71,4 +71,5 @@ jobs:
           name: fizam-namecheap-standalone
           path: .next/standalone/
           retention-days: 21
+          compression-level: 1
           if-no-files-found: error

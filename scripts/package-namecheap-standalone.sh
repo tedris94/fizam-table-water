@@ -42,6 +42,7 @@ echo "Verifying standalone can load runtime modules..."
     require('react-dom/server.browser');
     require('libsql');
     console.log('runtime deps OK');
+    process.exit(0);
   "
 )
 

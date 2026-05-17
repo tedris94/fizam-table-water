@@ -58,18 +58,15 @@ try {
   for (const dep of Object.keys(nextPkg.dependencies || {})) seeds.add(dep)
 } catch {}
 
+// Payload/SQLite stack only — avoid BFS from full `payload` (pulls 100+ UI packages).
 for (const name of [
-  'payload',
   '@payloadcms/db-sqlite',
-  '@payloadcms/next',
   '@payloadcms/drizzle',
-  'graphql',
-  'sharp',
-  'react',
-  'react-dom',
   'drizzle-orm',
   'libsql',
   '@libsql/client',
+  'react-dom',
+  'react',
 ]) {
   seeds.add(name)
 }
