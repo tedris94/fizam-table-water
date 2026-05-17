@@ -25,7 +25,7 @@ concurrency:
 jobs:
   bundle:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 25
 
     env:
       BUILD_STANDALONE: '1'
@@ -63,16 +63,12 @@ jobs:
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 
-      - name: Create flat ZIP for cPanel File Manager
-        run: |
-          cd .next/standalone
-          # -0 = store only (no compression); much faster for large node_modules on CI
-          zip -r -0 -q "$GITHUB_WORKSPACE/fizam-cpanel-upload.zip" . \
-            -x "*.git/*" "*/test/*" "*/tests/*" "*/__tests__/*" "*/docs/*"
-
-      - name: Upload artifact
+      # Do not run `zip` here — large node_modules can exceed the job timeout. GitHub
+      # compresses the folder when you download the artifact.
+      - name: Upload standalone bundle
         uses: actions/upload-artifact@v5
         with:
           name: fizam-namecheap-standalone
-          path: fizam-cpanel-upload.zip
+          path: .next/standalone/
           retention-days: 21
+          if-no-files-found: error

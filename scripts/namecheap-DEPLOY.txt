@@ -1,9 +1,9 @@
 FIZAM — Namecheap cPanel (Node.js) deploy checklist
 ===================================================
 
-From GitHub Actions: download the workflow artifact ZIP, open it, and use the
-inner file fizam-cpanel-upload.zip for cPanel File Manager (upload that file,
-then Extract into your application root).
+From GitHub Actions: download the workflow artifact "fizam-namecheap-standalone"
+(GitHub zips it for download). Extract once — server.js and package.json must
+sit at the top level of the folder you upload to cPanel (not nested).
 
 ZIP contents are meant to be extracted into your application root, e.g.
   /home/<user>/fizam.ng
@@ -32,10 +32,10 @@ After first upload
   mkdir -p data && chmod 775 data
   Restart the Node.js application in cPanel.
 
-Extract via SSH (if File Manager extract is unclear):
+Extract via SSH (upload artifact zip or rsync extracted files):
   cd ~/fizam.ng
   rm -rf node_modules .next
-  unzip -o fizam-cpanel-upload.zip
+  unzip -o fizam-namecheap-standalone.zip
   ls -la server.js .next/BUILD_ID node_modules/react-dom/package.json
 
 Optional: run seed / create admin once via SSH from this directory:

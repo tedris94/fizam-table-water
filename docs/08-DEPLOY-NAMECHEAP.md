@@ -58,7 +58,7 @@ pnpm start
 2. **Actions** → **Namecheap standalone ZIP** → **Run workflow**.
 3. Optional input: **`NEXT_PUBLIC_SITE_URL`** (default `https://fizam.ng`, no trailing slash). This value is **baked into the client** at build time.
 4. When the run finishes, open it → **Artifacts** → download **`fizam-namecheap-standalone`**.
-5. Unzip the GitHub download once; inside you’ll find **`fizam-cpanel-upload.zip`**. That inner ZIP is what you upload to cPanel.
+5. Unzip the GitHub download once. Upload/extract those files into your cPanel app root (`server.js` at the top level). You can zip them locally for File Manager if needed.
 
 Optional repo secret **`CI_BUILD_PAYLOAD_SECRET`**: used only during `next build`. If unset, CI generates a random value. **Always set a real `PAYLOAD_SECRET` in cPanel** for production (do not rely on the CI-only value).
 
@@ -88,7 +88,7 @@ Upload **`fizam-cpanel-upload.zip`** the same way as the Actions artifact.
 Example home path from hosting: **`/home/CPANEL_USER/fizam.ng`** (your user may differ).
 
 1. Open **File Manager** → your **application root** (the folder that will hold `server.js`).
-2. Upload **`fizam-cpanel-upload.zip`**.
+2. Upload the artifact files (or a ZIP you made locally from the extracted artifact).
 3. **Extract** here so **`server.js`** and **`package.json`** sit **directly** in that folder (not nested inside another folder).
 4. In **Terminal** (if available):
 
@@ -150,7 +150,7 @@ After deploy:
 
 1. Merge/push to GitHub.
 2. Run **Namecheap standalone ZIP** again (or rebuild locally on Linux/WSL).
-3. Upload the new **`fizam-cpanel-upload.zip`**. Before extract, **delete** the old **`node_modules`** folder (and **`.next`** if present) in the app root so stale files are not left behind — then extract, **Restart** Node.
+3. Upload/extract the new artifact. Before extract, **delete** the old **`node_modules`** folder (and **`.next`** if present) in the app root so stale files are not left behind — then extract, **Restart** Node.
 
 Rebuild whenever you change **`NEXT_PUBLIC_*`** variables — they are inlined at build time.
 

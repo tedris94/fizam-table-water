@@ -91,12 +91,19 @@ while (queue.length > 0) {
   }
 
   const dest = path.join(standaloneNm, name)
-  fs.mkdirSync(path.dirname(dest), { recursive: true })
-  fs.rmSync(dest, { recursive: true, force: true })
-  cpSync(pkgRoot, dest, { recursive: true, dereference: true })
+  const alreadyThere = fs.existsSync(path.join(dest, 'package.json'))
+
+  if (!alreadyThere) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true })
+    fs.rmSync(dest, { recursive: true, force: true })
+    cpSync(pkgRoot, dest, { recursive: true, dereference: true })
+    count++
+    console.log(`  + ${name}`)
+  } else {
+    console.log(`  = ${name} (already in standalone trace)`)
+  }
+
   copied.add(name)
-  count++
-  console.log(`  + ${name}`)
 
   const pkg = JSON.parse(fs.readFileSync(path.join(pkgRoot, 'package.json'), 'utf8'))
   for (const dep of Object.keys(pkg.dependencies || {})) {
