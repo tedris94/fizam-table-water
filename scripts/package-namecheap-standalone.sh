@@ -28,25 +28,9 @@ fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 
-# Standalone file tracing + pnpm symlinks omit many runtime deps. Install hoisted prod
-# deps in a staging dir and merge (flat node_modules, safe on cPanel).
-echo "Merging hoisted production node_modules into standalone..."
-# Install outside the repo so pnpm does not hoist into the workspace root (..).
-DEPLOY_STAGING="$(mktemp -d)"
-trap 'rm -rf "$DEPLOY_STAGING"' EXIT
-cp package.json pnpm-lock.yaml "$DEPLOY_STAGING/"
-{
-  cat .npmrc 2>/dev/null || true
-  echo "node-linker=hoisted"
-} > "${DEPLOY_STAGING}/.npmrc"
-pnpm install --prod --frozen-lockfile --dir "$DEPLOY_STAGING"
-STAGING_NODE_MODULES="${DEPLOY_STAGING}/node_modules"
-if [[ ! -d "$STAGING_NODE_MODULES" ]]; then
-  echo "error: staging node_modules missing at ${STAGING_NODE_MODULES}" >&2
-  exit 1
-fi
-mkdir -p .next/standalone/node_modules
-rsync -a "${STAGING_NODE_MODULES}/" .next/standalone/node_modules/
+# Standalone file tracing + pnpm symlinks omit nested runtime deps (libsql, react-dom, …).
+echo "Copying runtime dependency tree into standalone node_modules..."
+node scripts/copy-standalone-runtime-deps.cjs
 
 echo "Verifying standalone can load runtime modules..."
 (
