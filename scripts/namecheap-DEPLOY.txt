@@ -32,10 +32,11 @@ After first upload
   mkdir -p data && chmod 775 data
   Restart the Node.js application in cPanel.
 
-Extract via SSH (upload artifact zip or rsync extracted files):
+After extract you MUST have next-dist/ (GitHub drops hidden .next from downloads).
   cd ~/fizam.ng
-  rm -rf node_modules .next
+  rm -rf node_modules .next next-dist src
   unzip -o fizam-namecheap-standalone.zip
+  mv next-dist .next
   ls -la server.js .next/BUILD_ID node_modules/react-dom/package.json
 
 Optional: run seed / create admin once via SSH from this directory:

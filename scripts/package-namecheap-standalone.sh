@@ -46,4 +46,16 @@ echo "Verifying standalone can load runtime modules..."
   "
 )
 
-echo "OK: bundle ready under .next/standalone (see DEPLOY_NAMECHEAP.txt inside)"
+# GitHub artifact downloads often drop leading-dot folders (`.next`). Ship the build as
+# `next-dist/`; on the server run:  mv next-dist .next
+if [[ ! -f .next/standalone/.next/BUILD_ID ]]; then
+  echo "error: .next/standalone/.next/BUILD_ID missing after standalone build" >&2
+  exit 1
+fi
+rm -rf .next/standalone/next-dist
+cp -a .next/standalone/.next .next/standalone/next-dist
+if [[ ! -f .next/standalone/next-dist/BUILD_ID ]]; then
+  echo "error: next-dist/BUILD_ID missing" >&2
+  exit 1
+fi
+echo "OK: bundle ready under .next/standalone (see DEPLOY_NAMECHEAP.txt; includes next-dist/)"

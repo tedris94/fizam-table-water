@@ -63,6 +63,9 @@ jobs:
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 
+      - name: Verify next-dist is in the bundle
+        run: test -f .next/standalone/next-dist/BUILD_ID
+
       # Do not run `zip` here — large node_modules can exceed the job timeout. GitHub
       # compresses the folder when you download the artifact.
       - name: Upload standalone bundle
