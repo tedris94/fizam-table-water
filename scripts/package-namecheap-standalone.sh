@@ -43,8 +43,13 @@ cp package.json pnpm-lock.yaml "$DEPLOY_STAGING/"
   cd "$DEPLOY_STAGING"
   pnpm install --prod --frozen-lockfile
 )
+STAGING_NODE_MODULES="$(cd "$DEPLOY_STAGING" && pnpm root)"
+if [[ ! -d "$STAGING_NODE_MODULES" ]]; then
+  echo "error: staging node_modules missing at ${STAGING_NODE_MODULES}" >&2
+  exit 1
+fi
 mkdir -p .next/standalone/node_modules
-rsync -a "${DEPLOY_STAGING}/node_modules/" .next/standalone/node_modules/
+rsync -a "${STAGING_NODE_MODULES}/" .next/standalone/node_modules/
 rm -rf "$DEPLOY_STAGING"
 
 echo "Verifying standalone can load runtime modules..."
