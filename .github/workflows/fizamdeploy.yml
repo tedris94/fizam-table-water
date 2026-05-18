@@ -1,0 +1,104 @@
+# Build Next.js standalone (same as namecheap-standalone-zip) and deploy to Namecheap via FTP.
+#
+# Required repository secrets:
+#   FTP_HOST, FTP_USERNAME, FTP_PASSWORD, FTP_PORT
+#
+# Optional:
+#   FTP_SERVER_DIR     — remote folder under FTP home (default: fizam.ng/)
+#   CI_BUILD_PAYLOAD_SECRET — build-time PAYLOAD_SECRET only
+#
+# After deploy: run scripts/namecheap-server-setup.sh on the server (SSH) and
+# Restart the Node app in cPanel. See docs/08-DEPLOY-NAMECHEAP.md.
+
+name: Deploy fizam.ng (FTP)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      next_public_site_url:
+        description: 'NEXT_PUBLIC_SITE_URL (no trailing slash)'
+        required: false
+        default: 'https://fizam.ng'
+        type: string
+
+concurrency:
+  group: fizamdeploy-ftp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build standalone and FTP deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    env:
+      BUILD_STANDALONE: '1'
+      NODE_OPTIONS: --no-deprecation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+      - name: Use Node 24.15.0 + pnpm cache
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.15.0'
+          cache: 'pnpm'
+
+      - name: Set NEXT_PUBLIC_SITE_URL
+        env:
+          INPUT_URL: ${{ inputs.next_public_site_url }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${INPUT_URL}" ]; then
+            URL="${INPUT_URL}"
+          else
+            URL="https://fizam.ng"
+          fi
+          echo "NEXT_PUBLIC_SITE_URL=$URL" >> "$GITHUB_ENV"
+
+      - name: Set build-time PAYLOAD_SECRET
+        env:
+          FROM_SECRET: ${{ secrets.CI_BUILD_PAYLOAD_SECRET }}
+        run: |
+          if [ -n "$FROM_SECRET" ]; then
+            echo "PAYLOAD_SECRET=$FROM_SECRET" >> "$GITHUB_ENV"
+          else
+            echo "PAYLOAD_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build standalone + merge assets
+        run: bash scripts/package-namecheap-standalone.sh
+
+      - name: Verify bundle
+        run: test -f .next/standalone/next-dist/BUILD_ID
+
+      - name: Deploy to Namecheap via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./.next/standalone/
+          server-dir: ${{ secrets.FTP_SERVER_DIR || 'fizam.ng/' }}
+          # Never wipe the live SQLite database or cPanel-only files.
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/data/**
+            **/.env
+            **/.env.*
+
+      - name: Post-deploy reminder
+        run: |
+          echo "::notice::FTP upload finished. On the server:"
+          echo "  1. cd ~/fizam.ng && bash scripts/namecheap-server-setup.sh"
+          echo "  2. cPanel → Node.js app → RESTART"
+          echo "See docs/08-DEPLOY-NAMECHEAP.md"

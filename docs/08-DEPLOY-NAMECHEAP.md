@@ -68,6 +68,35 @@ Ignore cPanel’s “recommended” Node 14 — that is legacy. Use the latest *
 
 ## 3. Build the bundle (CI)
 
+### Option A — Automatic FTP deploy (push to `main`)
+
+Workflow: **`.github/workflows/fizamdeploy.yml`** (`Deploy fizam.ng (FTP)`)
+
+On every push to **`main`**, GitHub builds the standalone bundle and uploads it via FTP.
+
+**Repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Example | Notes |
+|--------|---------|--------|
+| `FTP_HOST` | `ftp.fizam.ng` or server hostname | From cPanel FTP accounts |
+| `FTP_USERNAME` | cPanel FTP user | |
+| `FTP_PASSWORD` | FTP password | |
+| `FTP_PORT` | `21` | Usually `21` (FTPS may use `990`) |
+| `FTP_SERVER_DIR` | `fizam.ng/` | Optional. Remote folder under FTP home (trailing slash). Default: `fizam.ng/` |
+| `CI_BUILD_PAYLOAD_SECRET` | random hex | Optional. Build-time only |
+
+The workflow **excludes `data/**`** so your live **`fizam.db` is not overwritten**.
+
+**After each FTP deploy** (still required on Namecheap):
+
+```bash
+cd ~/fizam.ng && bash scripts/namecheap-server-setup.sh
+```
+
+Then **cPanel → Restart** the Node app.
+
+### Option B — Manual artifact download
+
 1. Push to `main` (or your deploy branch).
 2. GitHub → **Actions** → **Namecheap standalone ZIP** → **Run workflow**.
 3. Input **`NEXT_PUBLIC_SITE_URL`**: `https://fizam.ng` (no trailing slash).
@@ -375,7 +404,8 @@ The standalone artifact is **runtime-only**:
 
 | File | Purpose |
 |------|---------|
-| `.github/workflows/namecheap-standalone-zip.yml` | CI workflow |
+| `.github/workflows/namecheap-standalone-zip.yml` | Manual CI artifact (ZIP download) |
+| `.github/workflows/fizamdeploy.yml` | Auto FTP deploy on push to `main` |
 | `scripts/package-namecheap-standalone.sh` | Build + merge deps + `next-dist/` |
 | `scripts/copy-standalone-runtime-deps.cjs` | Copies semver, libsql, sharp, etc. into bundle |
 | `scripts/namecheap-server-setup.sh` | Post-extract venv + sharp fix on server |
