@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import path from 'path'
@@ -8,11 +7,14 @@ import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 
-export const metadata: Metadata = {
-  title: 'About Us | Fizam Table Water',
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
+
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('About Fizam — Our Story & Mission'),
   description:
-    'Learn about FIZAM Table Water—NAFDAC-certified drinking water for Nigerian homes, our standards, and our production story.',
-}
+    'About Fizam Table Water: NAFDAC-certified drinking water for Nigerian homes. Learn who we are, our quality standards, and our production story at fizam.ng.',
+  path: '/about',
+})
 
 async function hasFactoryPhoto(): Promise<boolean> {
   try {

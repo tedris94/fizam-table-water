@@ -1,8 +1,16 @@
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { getPayloadSingleton } from '@/lib/payload'
 import { TeamGrid, type TeamMemberCard } from '@/components/frontend/TeamGrid'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
+
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Our Team'),
+  description:
+    'Meet the Fizam Table Water team behind Nigeria’s trusted NAFDAC-certified drinking water brand.',
+  path: '/team',
+})
 
 export const dynamic = 'force-dynamic'
 

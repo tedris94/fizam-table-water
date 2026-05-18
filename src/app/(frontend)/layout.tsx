@@ -2,17 +2,38 @@ import type { Metadata, Viewport } from 'next'
 import '../globals.css'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import { PWARegister } from '@/components/PWARegister'
+import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { inter } from '@/lib/fonts'
+import { buildPageMetadata } from '@/lib/seo'
+import { getSiteSeoSettings } from '@/lib/site-settings-seo'
 
-export const metadata: Metadata = {
-  title: 'Fizam Table Water',
-  description: 'Pure hydration for every Nigerian home.',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    title: 'Fizam Water',
-    statusBarStyle: 'black-translucent',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSeoSettings()
+  const meta = buildPageMetadata({
+    title: settings.defaultMetaTitle,
+    description: settings.defaultMetaDescription,
+    path: '/',
+    keywords: settings.defaultKeywords,
+    image: settings.logoUrl,
+  })
+
+  if (settings.googleSiteVerification) {
+    meta.verification = {
+      google: settings.googleSiteVerification,
+    }
+  }
+
+  return {
+    ...meta,
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      title: 'Fizam Water',
+      statusBarStyle: 'black-translucent',
+    },
+    applicationName: settings.siteName,
+    category: 'business',
+  }
 }
 
 export const viewport: Viewport = {
@@ -22,8 +43,9 @@ export const viewport: Viewport = {
 /** Marketing site document shell (see root `layout.tsx` — Payload admin uses its own document). */
 export default function FrontendLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en-NG" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
+        <SiteJsonLd />
         <SiteChrome>{children}</SiteChrome>
         <PWARegister />
       </body>

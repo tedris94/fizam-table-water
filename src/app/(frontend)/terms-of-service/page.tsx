@@ -1,12 +1,15 @@
-import type { Metadata } from 'next'
 import { FileText } from 'lucide-react'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service — Fizam Table Water',
-}
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Terms of Service'),
+  description: 'Terms of service for ordering Fizam Table Water at fizam.ng.',
+  path: '/terms-of-service',
+  noIndex: true,
+})
 
 export default function TermsOfServicePage() {
   return (

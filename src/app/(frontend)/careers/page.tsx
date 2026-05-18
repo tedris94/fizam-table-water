@@ -1,8 +1,16 @@
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { getPayloadSingleton } from '@/lib/payload'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 import { CareersList, type JobCard } from '@/components/frontend/CareersList'
+
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Careers — Join Fizam'),
+  description:
+    'Careers at Fizam Table Water in Nigeria. View open roles in production, quality, sales, and operations.',
+  path: '/careers',
+})
 
 export const dynamic = 'force-dynamic'
 

@@ -1,12 +1,15 @@
-import type { Metadata } from 'next'
 import { Shield } from 'lucide-react'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy — Fizam Table Water',
-}
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Privacy Policy'),
+  description: 'Privacy policy for Fizam Table Water (fizam.ng) — how we collect and protect your data.',
+  path: '/privacy-policy',
+  noIndex: true,
+})
 
 export default function PrivacyPolicyPage() {
   return (

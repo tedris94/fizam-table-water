@@ -14,8 +14,8 @@ export function SEOSettingsView({ role }: SEOSettingsViewProps) {
     googleAnalytics: 'G-XXXXXXXXXX',
     googleSearchConsole: '',
     facebookPixel: '',
-    robotsTxt: 'User-agent: *\nDisallow: /admin\nSitemap: https://fizamwater.com/sitemap.xml',
-    canonicalUrl: 'https://fizamwater.com',
+    robotsTxt: 'User-agent: *\nDisallow: /admin\nSitemap: https://fizam.ng/sitemap.xml',
+    canonicalUrl: 'https://fizam.ng',
     ogImage: '/images/og-image.jpg',
   });
 

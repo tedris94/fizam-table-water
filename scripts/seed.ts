@@ -368,9 +368,11 @@ async function seed() {
       contactEmail: 'hello@fizam.ng',
       contactPhone: '+234 800 000 0000',
       address: 'Lagos, Nigeria',
-      defaultMetaTitle: 'Fizam Table Water — Pure hydration',
+      defaultMetaTitle: 'Fizam | Fizam Table Water — NAFDAC Certified Drinking Water in Nigeria',
       defaultMetaDescription:
-        'Trusted Nigerian table water brand. Order online, explore careers, and learn about our quality standards.',
+        'Fizam (Fizam Table Water) — official fizam.ng. NAFDAC-certified sachet, bottle & dispenser water. Order online for delivery across Nigeria.',
+      defaultKeywords:
+        'Fizam, Fizam Table Water, Fizam water, fizam.ng, table water Nigeria, sachet water Nigeria, NAFDAC certified water',
     },
   })
 

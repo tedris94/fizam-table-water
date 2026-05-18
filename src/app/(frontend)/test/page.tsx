@@ -1,4 +1,10 @@
-export const metadata = { title: 'Test — Fizam' }
+import { buildPageMetadata } from '@/lib/seo'
+
+export const metadata = buildPageMetadata({
+  title: 'Test — Fizam',
+  path: '/test',
+  noIndex: true,
+})
 
 export default function TestPage() {
   return (

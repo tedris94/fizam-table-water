@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { getPayloadSingleton } from '@/lib/payload'
 import { JobApplicationForm } from '@/components/frontend/JobApplicationForm'
 import { Navbar } from '@/components/frontend/Navbar'
@@ -20,9 +21,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       limit: 1,
     })
     const job = jobs.docs[0]
-    return { title: job ? `Apply — ${job.title}` : 'Apply — Fizam' }
+    return buildPageMetadata({
+      title: job
+        ? titleWithBrand(`Apply — ${job.title}`)
+        : titleWithBrand('Job Application'),
+      description: job
+        ? `Apply for ${job.title} at Fizam Table Water in ${job.location || 'Nigeria'}.`
+        : 'Apply for a career at Fizam Table Water Nigeria.',
+      path: `/careers/${slug}/apply`,
+      noIndex: true,
+    })
   } catch {
-    return { title: 'Apply — Fizam' }
+    return buildPageMetadata({
+      title: titleWithBrand('Job Application'),
+      path: `/careers/${slug}/apply`,
+      noIndex: true,
+    })
   }
 }
 

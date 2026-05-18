@@ -50,6 +50,7 @@ Open the [`docs/`](./docs) folder — read the files in order if you have never 
 8. [`docs/07-EMAIL-SETUP.md`](./docs/07-EMAIL-SETUP.md)
 9. [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md)
 10. [`docs/09-TROUBLESHOOTING.md`](./docs/09-TROUBLESHOOTING.md)
+11. [`docs/10-SEO-GOOGLE.md`](./docs/10-SEO-GOOGLE.md) — sitemap, Search Console, ranking for “Fizam”
 
 ---
 

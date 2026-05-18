@@ -53,6 +53,23 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'defaultMetaDescription',
       type: 'textarea',
+      admin: {
+        description: 'Used in Google search snippets and social shares (150–160 characters ideal).',
+      },
+    },
+    {
+      name: 'defaultKeywords',
+      type: 'textarea',
+      admin: {
+        description: 'Comma-separated SEO keywords (e.g. Fizam, Fizam Table Water, table water Nigeria).',
+      },
+    },
+    {
+      name: 'googleSiteVerification',
+      type: 'text',
+      admin: {
+        description: 'Google Search Console verification code (content value only, not the full meta tag).',
+      },
     },
   ],
 }

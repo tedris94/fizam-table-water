@@ -1,12 +1,15 @@
-import type { Metadata } from 'next'
 import { Award, CheckCircle, Shield, Droplet } from 'lucide-react'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 
-export const metadata: Metadata = {
-  title: 'Quality Certifications — Fizam Table Water',
-}
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Quality & NAFDAC Certifications'),
+  description:
+    'Fizam Table Water quality certifications: NAFDAC registration, ISO-aligned processes, and lab-tested purity for Nigerian consumers.',
+  path: '/quality-certifications',
+})
 
 const certifications = [
   {

@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getPayloadSingleton } from '@/lib/payload'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
+import { getSiteSeoSettings } from '@/lib/site-settings-seo'
 import { Hero } from '@/components/frontend/Hero'
 import { Products } from '@/components/frontend/Products'
 import { Quality } from '@/components/frontend/Quality'
@@ -10,6 +13,18 @@ import { BackToTop } from '@/components/frontend/BackToTop'
 import { HashHighlighter } from '@/components/frontend/HashHighlighter'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSeoSettings()
+  return buildPageMetadata({
+    title: titleWithBrand('Fizam — Official Site | Table Water Nigeria'),
+    description:
+      'Welcome to Fizam (fizam.ng) — the official Fizam Table Water website. NAFDAC-certified sachet, bottle & dispenser water. Order online for delivery across Nigeria.',
+    path: '/',
+    keywords: ['Fizam', 'fizam.ng', 'Fizam Table Water', ...settings.defaultKeywords],
+    image: settings.logoUrl,
+  })
+}
 
 export default async function HomePage() {
   const payload = await getPayloadSingleton()

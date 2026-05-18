@@ -1,13 +1,16 @@
-import type { Metadata } from 'next'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
+import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
 import { OrderCheckout } from '@/components/order/OrderCheckout'
 import { HashHighlighter } from '@/components/frontend/HashHighlighter'
 
-export const metadata: Metadata = {
-  title: 'Order — Fizam Table Water',
-}
+export const metadata = buildPageMetadata({
+  title: titleWithBrand('Order Table Water Online'),
+  description:
+    'Order Fizam table water, sachets, and dispenser bottles online. Fast delivery across Nigeria — secure Paystack checkout at fizam.ng.',
+  path: '/order',
+})
 
 export const dynamic = 'force-dynamic'
 
