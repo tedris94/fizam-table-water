@@ -29,6 +29,13 @@ for (const entry of [
 }
 
 function resolvePkgRoot(name) {
+  // @img/* packages resolve from sharp's dependency tree (pnpm nested layout).
+  if (name.startsWith('@img/')) {
+    try {
+      const req = createRequire(require.resolve('sharp/package.json'))
+      return path.dirname(req.resolve(`${name}/package.json`))
+    } catch {}
+  }
   for (const anchor of anchors) {
     try {
       const req = createRequire(anchor)

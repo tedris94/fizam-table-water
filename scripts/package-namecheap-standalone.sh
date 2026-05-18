@@ -32,6 +32,15 @@ cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
 echo "Copying runtime dependency tree into standalone node_modules..."
 node scripts/copy-standalone-runtime-deps.cjs
 
+if [[ "$(uname -s)" == "Linux" ]]; then
+  for pkg in node_modules/@img/sharp-linux-x64 node_modules/@img/sharp-libvips-linux-x64; do
+    if [[ ! -f ".next/standalone/${pkg}/package.json" ]]; then
+      echo "error: missing .next/standalone/${pkg} (sharp linux bindings)" >&2
+      exit 1
+    fi
+  done
+fi
+
 echo "Verifying standalone can load runtime modules..."
 (
   cd .next/standalone
@@ -42,9 +51,6 @@ echo "Verifying standalone can load runtime modules..."
     require('react-dom/server.browser');
     require('libsql');
     require('semver/functions/coerce');
-    // Do not require('sharp') here — loads native bindings. Verify linux @img packages exist.
-    require.resolve('@img/sharp-linux-x64');
-    require.resolve('@img/sharp-libvips-linux-x64');
     console.log('runtime deps OK');
     process.exit(0);
   "
