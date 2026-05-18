@@ -42,7 +42,9 @@ echo "Verifying standalone can load runtime modules..."
     require('react-dom/server.browser');
     require('libsql');
     require('semver/functions/coerce');
-    require('sharp');
+    // Do not require('sharp') here — loads native bindings. Verify linux @img packages exist.
+    require.resolve('@img/sharp-linux-x64');
+    require.resolve('@img/sharp-libvips-linux-x64');
     console.log('runtime deps OK');
     process.exit(0);
   "
