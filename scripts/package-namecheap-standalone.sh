@@ -41,6 +41,8 @@ echo "Verifying standalone can load runtime modules..."
     require('@next/env');
     require('react-dom/server.browser');
     require('libsql');
+    require('semver/functions/coerce');
+    require('sharp');
     console.log('runtime deps OK');
     process.exit(0);
   "

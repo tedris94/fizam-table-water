@@ -67,6 +67,8 @@ for (const name of [
   '@libsql/client',
   'react-dom',
   'react',
+  'sharp',
+  'semver',
 ]) {
   seeds.add(name)
 }
@@ -88,17 +90,12 @@ while (queue.length > 0) {
   }
 
   const dest = path.join(standaloneNm, name)
-  const alreadyThere = fs.existsSync(path.join(dest, 'package.json'))
-
-  if (!alreadyThere) {
-    fs.mkdirSync(path.dirname(dest), { recursive: true })
-    fs.rmSync(dest, { recursive: true, force: true })
-    cpSync(pkgRoot, dest, { recursive: true, dereference: true })
-    count++
-    console.log(`  + ${name}`)
-  } else {
-    console.log(`  = ${name} (already in standalone trace)`)
-  }
+  // Always overwrite — standalone trace often has incomplete packages (e.g. sharp without semver).
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.rmSync(dest, { recursive: true, force: true })
+  cpSync(pkgRoot, dest, { recursive: true, dereference: true })
+  count++
+  console.log(`  + ${name}`)
 
   copied.add(name)
 
