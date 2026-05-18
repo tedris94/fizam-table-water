@@ -1,50 +1,49 @@
-FIZAM — Namecheap cPanel (Node.js) deploy checklist
-===================================================
+FIZAM — Namecheap deploy checklist (copy-paste)
+=================================================
 
-From GitHub Actions: download the workflow artifact "fizam-namecheap-standalone"
-(GitHub zips it for download). Extract once — server.js and package.json must
-sit at the top level of the folder you upload to cPanel (not nested).
+FULL GUIDE: docs/08-DEPLOY-NAMECHEAP.md in the GitHub repo.
 
-ZIP contents are meant to be extracted into your application root, e.g.
-  /home/<user>/fizam.ng
-so that server.js and package.json sit directly in that folder.
+BUILD (GitHub Actions)
+----------------------
+  Actions → "Namecheap standalone ZIP" → Run workflow
+  Download artifact: fizam-namecheap-standalone (~60 MB)
+  Rebuild if you change NEXT_PUBLIC_* (baked in at build time).
 
-Before extracting a new ZIP over an old deploy, delete node_modules/ (and .next/ if
-present) in that folder so incomplete modules from a previous upload are not kept.
+UPLOAD
+------
+  Extract into app root so server.js is at:
+    /home/<user>/fizam.ng/server.js
 
-cPanel → Setup Node.js App
---------------------------
-  Application root:     fizam.ng   (or full path /home/<user>/fizam.ng)
-  Application URL:     your domain, path empty for site root
-  Application startup:   server.js
-  Mode:                  Production
+  KEEP data/fizam.db on redeploy — do not delete data/
 
-Environment variables (cPanel → Node app → Environment variables)
------------------------------------------------------------------
-  NEXT_PUBLIC_SITE_URL     https://fizam.ng   (no trailing slash; must match live URL)
-  PAYLOAD_SECRET           long random hex (never reuse the CI build-only value)
-  PAYSTACK_SECRET_KEY      sk_live_... (or sk_test_...)
-  DATABASE_URI             optional; default is SQLite at ./data/fizam.db
-  SMTP_* / CONTACT_*       optional; see .env.example in the source repo
-
-After first upload
-------------------
-  mkdir -p data && chmod 775 data
-  Restart the Node.js application in cPanel.
-
-After extract you MUST have next-dist/ (GitHub drops hidden .next from downloads).
+AFTER EXTRACT (SSH)
+-------------------
   cd ~/fizam.ng
-  rm -rf node_modules .next next-dist src
-  unzip -o fizam-namecheap-standalone.zip
-  mv next-dist .next
-  ls -la server.js .next/BUILD_ID node_modules/react-dom/package.json
+  bash scripts/namecheap-server-setup.sh
+  # Or manually: see docs/08-DEPLOY-NAMECHEAP.md section "Post-extract"
 
-Optional: run seed / create admin once via SSH from this directory:
-  npx --yes tsx scripts/seed.ts
-(Requires uploading scripts + tsx or running from a dev machine against production DB — prefer one-time admin create via Payload if you skip seed.)
+  mv next-dist .next   (if not done by setup script)
+  cPanel → RESTART Node app
 
-Paystack
---------
-  Callback uses NEXT_PUBLIC_SITE_URL — it must be https on production.
+DATABASE (pick one)
+-------------------
+  A) RECOMMENDED ongoing: keep data/fizam.db; back up before each deploy.
+  B) First deploy / empty DB: upload dev data/fizam.db from your PC, OR
+     after a build with prodMigrations, empty DB + Production restart runs migrations.
 
-Rebuild ZIP when you change NEXT_PUBLIC_* vars; those are inlined at build time.
+cPanel NODE APP
+---------------
+  Node 24.x (e.g. 24.15.0) | Mode: Production | Startup: server.js
+  Env: PAYLOAD_SECRET, NEXT_PUBLIC_SITE_URL=https://fizam.ng,
+       PAYSTACK_SECRET_KEY, DATABASE_URI=file:./data/fizam.db, SMTP_*
+
+VERIFY
+------
+  curl -sI https://fizam.ng/ | head -3        → HTTP/2 200
+  curl -sI https://fizam.ng/admin | head -3   → HTTP/2 200
+  tail -20 stderr.log                         → empty or no new errors
+
+SHARP ON NAMECHEAP (required every venv refresh)
+----------------------------------------------
+  Use sharp@0.33.5 — NOT 0.34.x (CPU v2 error), NOT wasm (OOM).
+  See namecheap-server-setup.sh

@@ -1,175 +1,406 @@
-# 08 · Deploying to Namecheap (cPanel + Node.js)
+# 08 · Namecheap deployment runbook (cPanel + Node.js)
 
-Recipe for **local development builds** and **production** on Namecheap Stellar–style shared hosting (one Node.js app per domain; Next.js + Payload share one process).
+End-to-end guide for deploying **Fizam** (Next.js 15 + Payload 3 + SQLite) to Namecheap shared hosting. Based on a working production setup at `https://fizam.ng` (May 2026).
 
-**Recommended production path:** build on **GitHub Actions** (Linux), download the artifact ZIP, upload to cPanel. That avoids Windows symlink issues with `output: 'standalone'` and matches `next.config.ts` (`BUILD_STANDALONE=1`).
+**Recommended path:** build on **GitHub Actions** (Linux) → download artifact → upload to cPanel → run **post-extract setup** → restart Node.
 
 ---
 
-## Prerequisites
+## Table of contents
 
-| Item | Notes |
+1. [How it works](#1-how-it-works)
+2. [Prerequisites](#2-prerequisites)
+3. [Build the bundle (CI)](#3-build-the-bundle-ci)
+4. [cPanel Node.js app setup](#4-cpanel-nodejs-app-setup)
+5. [First-time deploy](#5-first-time-deploy)
+6. [Post-extract server setup (required)](#6-post-extract-server-setup-required)
+7. [Database](#7-database)
+8. [Redeploy / updates](#8-redeploy--updates)
+9. [Smoke tests](#9-smoke-tests)
+10. [Troubleshooting](#10-troubleshooting)
+11. [What is *not* on the server](#11-what-is-not-on-the-server)
+12. [Reference: files in the repo](#12-reference-files-in-the-repo)
+
+---
+
+## 1. How it works
+
+```mermaid
+flowchart LR
+  subgraph ci [GitHub Actions Linux]
+    A[pnpm build standalone] --> B[copy runtime deps]
+    B --> C[artifact folder]
+  end
+  subgraph cpanel [Namecheap cPanel]
+    D[Upload / extract] --> E[CloudLinux venv merge]
+    E --> F[sharp 0.33.5 + semver]
+    F --> G[server.js Passenger]
+    G --> H[data/fizam.db]
+  end
+  ci --> D
+  G --> I[fizam.ng]
+```
+
+| Layer | Detail |
+|--------|--------|
+| **Process** | One Node.js app (`server.js`) serves Next.js + Payload. |
+| **Build** | `BUILD_STANDALONE=1` → flat bundle under `.next/standalone/` (shipped as artifact root). |
+| **Hosting quirk** | CloudLinux stores npm packages in `~/nodevenv/.../lib/node_modules` and expects `~/fizam.ng/node_modules` to be a **symlink** to that path. |
+| **CPU quirk** | Namecheap shared CPUs are often **x86-64-v1**. Use **sharp@0.33.5** (not 0.34.x native, not WebAssembly). |
+| **Artifacts quirk** | GitHub drops dot-folders. The bundle ships **`.next` as `next-dist/`** — rename on the server. |
+| **Database** | SQLite at `./data/fizam.db`. **Keep this file** across redeploys. |
+
+---
+
+## 2. Prerequisites
+
+| Item | Value |
 |------|--------|
-| Node | **v24.x** — pinned in `.nvmrc` / CI to match cPanel (e.g. **24.15.0** when Namecheap offers it). |
-| Package manager | **pnpm** only (`pnpm-lock.yaml`). Do **not** use `npm install` in this repo. |
-| GitHub | Repo connected (e.g. `tedris94/fizam-table-water`) for Actions workflow. |
+| Node (cPanel + CI) | **24.x** (e.g. **24.15.0**) — see `.nvmrc` |
+| Package manager (repo) | **pnpm** only — do not run `npm install` in the repo root on your PC |
+| GitHub repo | e.g. `tedris94/fizam-table-water` |
+| cPanel | **Setup Node.js App** enabled for the domain |
+| SSL | AutoSSL / HTTPS for `https://fizam.ng` |
 
-**Why does cPanel show Node 14 as “recommended”?** That is a **legacy default** on many shared hosts so very old apps keep working. It is **not** advice for a modern Next.js 15 app. Pick the **latest Node 24.x** your host lists (e.g. **24.15.0**) — same as `.nvmrc` and GitHub Actions.
-
-Project files that matter for deploy:
-
-- `.github/workflows/namecheap-standalone-zip.yml` — CI bundle.
-- `scripts/package-namecheap-standalone.sh` — same steps as CI (Linux/WSL).
-- `scripts/namecheap-DEPLOY.txt` — copied into the artifact as `DEPLOY_NAMECHEAP.txt`.
-- Root `app.js` — **only** used if you deploy a **full tree** where `.next/standalone/server.js` still lives under `.next/standalone/`. The **CI flat ZIP** does **not** use `app.js`; use **`server.js`** as startup (see below).
+Ignore cPanel’s “recommended” Node 14 — that is legacy. Use the latest **Node 24** offered.
 
 ---
 
-## A. Local machine (daily dev)
+## 3. Build the bundle (CI)
 
-From the project root:
+1. Push to `main` (or your deploy branch).
+2. GitHub → **Actions** → **Namecheap standalone ZIP** → **Run workflow**.
+3. Input **`NEXT_PUBLIC_SITE_URL`**: `https://fizam.ng` (no trailing slash).
+4. When green (~2 min), open the run → **Artifacts** → download **`fizam-namecheap-standalone`**.
+5. Unzip once on your PC. You should see `server.js`, `package.json`, `next-dist/`, `public/`, `node_modules/`, `migrations/`, `DEPLOY_NAMECHEAP.txt`, etc.
 
-```powershell
-cd C:\wamp64\www\fizam.ng
-node -v                    # expect same as .nvmrc (e.g. v24.15.0)
-corepack enable
-corepack prepare pnpm@9.15.4 --activate
-pnpm install
-pnpm dev
-```
+**Optional repo secret:** `CI_BUILD_PAYLOAD_SECRET` — used only during `next build`. Production **must** use its own `PAYLOAD_SECRET` in cPanel.
 
-- **`.npmrc`** sets `confirm-modules-purge=false` so `pnpm install` does not hang on prompts.
-- If **`pnpm install`** fails with **`EPERM` / `unlink … .node`**: stop **`pnpm dev`** (and any other process using this folder), then remove `node_modules` and run `pnpm install` again.
+**Do not** rely on a `zip` step inside CI for the full `node_modules` tree — it can timeout. GitHub compresses the uploaded folder when you download the artifact.
 
-Normal production build (not standalone):
+### Rebuild when
 
-```powershell
-pnpm run build
-pnpm start
-```
+- Any change to **`NEXT_PUBLIC_*`** (inlined at build time).
+- Code / Payload schema changes (new collections, globals, fields).
+- After updating `src/migrations/` (run `pnpm payload migrate:create` locally when schema changes).
 
-**Standalone on Windows** often fails without Developer Mode / symlink rights. For a local **standalone** bundle matching production, use **WSL**, **Linux**, or **GitHub Actions** (recommended).
-
----
-
-## B. Production bundle — GitHub Actions (recommended)
-
-1. Push your branch to GitHub.
-2. **Actions** → **Namecheap standalone ZIP** → **Run workflow**.
-3. Optional input: **`NEXT_PUBLIC_SITE_URL`** (default `https://fizam.ng`, no trailing slash). This value is **baked into the client** at build time.
-4. When the run finishes, open it → **Artifacts** → download **`fizam-namecheap-standalone`**.
-5. Unzip the GitHub download once. Upload/extract into your cPanel app root (`server.js` at the top level). **Required:** the artifact includes **`next-dist/`** (not `.next`) because GitHub drops dot-folders — on the server run **`mv next-dist .next`** before starting the app.
-
-Optional repo secret **`CI_BUILD_PAYLOAD_SECRET`**: used only during `next build`. If unset, CI generates a random value. **Always set a real `PAYLOAD_SECRET` in cPanel** for production (do not rely on the CI-only value).
-
----
-
-## C. Production bundle — local (Linux or WSL only)
-
-Mirrors CI:
+### Local build (Linux / WSL only)
 
 ```bash
 cd /path/to/fizam.ng
 corepack enable && corepack prepare pnpm@9.15.4 --activate
-pnpm install --frozen-lockfile
 export BUILD_STANDALONE=1
-export NEXT_PUBLIC_SITE_URL=https://fizam.ng   # no trailing slash
-export PAYLOAD_SECRET=$(openssl rand -hex 48)  # build-time only
+export NEXT_PUBLIC_SITE_URL=https://fizam.ng
+export PAYLOAD_SECRET=$(openssl rand -hex 48)
 bash scripts/package-namecheap-standalone.sh
-(cd .next/standalone && zip -r ~/fizam-cpanel-upload.zip .)
+# Upload contents of .next/standalone/ like the CI artifact
 ```
 
-Upload **`fizam-cpanel-upload.zip`** the same way as the Actions artifact.
+Windows standalone builds often fail (symlinks). Use CI or WSL.
 
 ---
 
-## D. cPanel File Manager
+## 4. cPanel Node.js app setup
 
-Example home path from hosting: **`/home/CPANEL_USER/fizam.ng`** (your user may differ).
-
-1. Open **File Manager** → your **application root** (the folder that will hold `server.js`).
-2. Upload the artifact files (or a ZIP you made locally from the extracted artifact).
-3. **Extract** here so **`server.js`** and **`package.json`** sit **directly** in that folder (not nested inside another folder).
-4. In **Terminal** (if available):
-
-   ```bash
-   mkdir -p data && chmod 775 data
-   ```
-
-   SQLite uses **`data/fizam.db`** by default (see `.env.example` / `DATABASE_URI`).
-
----
-
-## E. cPanel → Setup Node.js App
-
-**Create** (or edit) the application:
+**Setup Node.js App** → create or edit:
 
 | Field | Value |
 |--------|--------|
-| Node.js version | Same as **.nvmrc** / CI (e.g. **24.15.0**) — or any **24.x** that satisfies `engines` |
+| Node.js version | **24.15.0** (or latest 24.x) |
 | Application mode | **Production** |
-| Application root | Folder where you extracted the ZIP (e.g. `fizam.ng` or full path `/home/USER/fizam.ng`). |
-| Application URL | **`fizam.ng`**, path **empty** for site root. |
-| Application startup file | **`server.js`** ← Next standalone entry (flat artifact). |
+| Application root | `fizam.ng` → `/home/USER/fizam.ng` |
+| Application URL | `fizam.ng` (path empty = site root) |
+| Application startup file | **`server.js`** |
 
-Do **not** set startup to **`app.js`** unless you intentionally deployed the **full repo layout** with `.next/standalone/server.js` still under `.next/standalone/` (Passenger `app.js` wrapper in repo root).
+Do **not** use `app.js` for the CI flat bundle.
 
-Then **Environment variables** → add everything you need from **`.env.example`** (production values), especially:
+### Environment variables (minimum)
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_SITE_URL` | **`https://fizam.ng`** — Paystack callback base, links, Payload `serverURL`. Must match the live URL. |
-| `PAYLOAD_SECRET` | Long random secret (required). |
-| `PAYSTACK_SECRET_KEY` | Live or test secret from Paystack. |
-| `DATABASE_URI` | Optional; default file DB under `./data/fizam.db`. |
-| `SMTP_*`, `CONTACT_NOTIFY_EMAIL`, etc. | Optional; see `.env.example`. |
+| Variable | Example | Notes |
+|----------|---------|--------|
+| `PAYLOAD_SECRET` | long random hex | Required. Never commit. Rotate if leaked. |
+| `NEXT_PUBLIC_SITE_URL` | `https://fizam.ng` | No trailing slash. Must match live URL. |
+| `DATABASE_URI` | `file:./data/fizam.db` | Optional if default path is fine. |
+| `PAYSTACK_SECRET_KEY` | `sk_live_...` | For checkout |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | `pk_live_...` | Client-side |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, … | see `.env.example` | Email |
+| `CONTACT_NOTIFY_EMAIL`, `HR_NOTIFY_EMAIL` | | Optional |
 
-**Save**, then **Restart** the Node application.
-
----
-
-## F. SSL
-
-cPanel → **SSL/TLS Status** → run **AutoSSL** for the domain. Use **HTTPS** everywhere; align `NEXT_PUBLIC_SITE_URL` with `https://…`.
+**Save** → **Restart** after every env change.
 
 ---
 
-## G. Smoke tests
+## 5. First-time deploy
 
-After deploy:
+### 5.1 Upload files
 
-- **`https://fizam.ng`** — homepage.
-- **`https://fizam.ng/admin`** — Payload admin (create super-admin on first run if prompted).
-- **`https://fizam.ng/order`** — checkout (needs `PAYSTACK_SECRET_KEY` for payment init).
+1. File Manager → `/home/USER/fizam.ng/`
+2. Upload the artifact ZIP (or files).
+3. Extract so **`server.js`** is directly in `fizam.ng/`, not in a subfolder.
 
-**Diagnostics:** public **`/diagnostics`** redirects to **`/dashboard/diagnostics`** (super admin after login). Do not expect a public env checklist at `/diagnostics` anymore.
+### 5.2 Clean old artifacts (if redeploying)
+
+```bash
+cd ~/fizam.ng
+rm -rf node_modules .next next-dist src
+# Do NOT delete data/ unless you intend to reset the database
+```
+
+### 5.3 Rename Next build output
+
+```bash
+cd ~/fizam.ng
+mv next-dist .next
+test -f .next/BUILD_ID && echo "BUILD_ID OK"
+```
+
+### 5.4 Post-extract setup + database
+
+See [§6](#6-post-extract-server-setup-required) and [§7](#7-database).
+
+### 5.5 Restart and verify
+
+cPanel → **Restart** → [§9 Smoke tests](#9-smoke-tests).
 
 ---
 
-## H. Updates (redeploy)
+## 6. Post-extract server setup (required)
 
-1. Merge/push to GitHub.
-2. Run **Namecheap standalone ZIP** again (or rebuild locally on Linux/WSL).
-3. Upload/extract the new artifact. Before extract, delete **`node_modules`**, **`.next`**, **`next-dist`**, and leftover **`src/`** from old deploys. After extract run **`mv next-dist .next`**, then **Restart** Node.
+CloudLinux **blocks** `npm install` in the app root when `node_modules` is a real folder. The CI ZIP includes `node_modules`, but you must **merge** it into the virtualenv and **reinstall sharp + semver** there.
 
-Rebuild whenever you change **`NEXT_PUBLIC_*`** variables — they are inlined at build time.
+### Option A — setup script (recommended)
+
+Copy `scripts/namecheap-server-setup.sh` from the repo to the server (or include it in your upload), then:
+
+```bash
+cd ~/fizam.ng
+chmod +x scripts/namecheap-server-setup.sh
+bash scripts/namecheap-server-setup.sh
+```
+
+### Option B — manual commands
+
+```bash
+source ~/nodevenv/fizam.ng/24/bin/activate
+cd ~/fizam.ng
+
+VENV_LIB="$HOME/nodevenv/fizam.ng/24/lib"
+VENV_NM="${VENV_LIB}/node_modules"
+NPM="${VENV_LIB}/../bin/npm"
+
+[[ -d next-dist && ! -d .next ]] && mv next-dist .next
+
+mkdir -p "$VENV_NM" data && chmod 775 data
+
+if [[ -d node_modules ]] && [[ ! -L node_modules ]]; then
+  cp -a node_modules/. "$VENV_NM/"
+  rm -rf node_modules
+fi
+ln -sfn "$VENV_NM" node_modules
+
+# Never use sharp-wasm32 on Namecheap (OOM). Never use sharp 0.34+ native (CPU v2 error).
+rm -rf "$VENV_NM/@img/sharp-wasm32"
+"$NPM" install semver@7 sharp@0.33.5 --include=optional --omit=dev --prefix "$VENV_LIB"
+
+node -e "require('semver/functions/coerce'); require('sharp'); console.log('sharp', require('sharp').versions.sharp)"
+```
+
+Then **cPanel → Restart**.
+
+### Why sharp@0.33.5?
+
+| Approach | Result on Namecheap |
+|----------|---------------------|
+| sharp **0.34.x** linux-x64 | `Unsupported CPU: v2 microarchitecture` |
+| **@img/sharp-wasm32** | `WebAssembly.instantiate(): Out of memory` |
+| **sharp@0.33.5** linux-x64 | **Works** (verified) |
 
 ---
 
-## I. Backups
+## 7. Database
 
-Download **`data/fizam.db`** regularly (File Manager or backup tool). Losing it loses CMS content, products, orders, and users.
+SQLite file: **`/home/USER/fizam.ng/data/fizam.db`**
+
+### Strategy A — Upload dev database (simplest, proven)
+
+1. On your PC after `pnpm dev` / `pnpm seed`: `data/fizam.db` should be **hundreds of KB**, not 4 KB.
+2. cPanel File Manager → upload to `fizam.ng/data/fizam.db`.
+3. `chmod 664` on the file, `775` on `data/`.
+
+```bash
+sqlite3 data/fizam.db "SELECT name FROM sqlite_master WHERE type='table' AND name='home_page';"
+# Should print: home_page
+```
+
+Use the **same admin login** as local WAMP.
+
+### Strategy B — Migrations (new deploys after May 2026)
+
+The repo includes `src/migrations/` and `prodMigrations` in `payload.config.ts`. On **Production** start, Payload runs pending migrations when the app boots.
+
+1. Deploy a build that includes this config (new CI artifact).
+2. Ensure `data/fizam.db` is missing or empty **only if** you want a fresh DB.
+3. **Restart** Node → tables are created.
+4. Create first admin at `/admin`.
+
+When you change Payload schema locally:
+
+```bash
+pnpm payload migrate:create describe_your_change
+git add src/migrations/
+git commit && push
+# New CI build → redeploy → restart (migrations run automatically)
+```
+
+### Strategy C — Development mode (one-time fallback)
+
+Only if migrations are not in your deployed build yet:
+
+1. cPanel → Application mode **Development** → **Restart**
+2. Open `https://fizam.ng/admin` once
+3. Back to **Production** → **Restart**
+
+### Do not use on production server
+
+- `pnpm run seed` / `scripts/seed.ts` — **not shipped** in the standalone artifact; `tsx` is not installed in the venv.
+- `npm install --prefix .` in app root — CloudLinux refuses it.
 
 ---
 
-## J. Troubleshooting
+## 8. Redeploy / updates
 
-| Symptom | Check |
-|---------|--------|
-| 502 / Internal Server Error | Startup file **`server.js`** (not default `app.js` unless you ship the updated `app.js` wrapper). **`PAYLOAD_SECRET`** set in cPanel env. After deploy, `tail stderr.log` — if timestamp is old, Passenger is not running this folder. |
-| 502 / app won’t start | Startup file is **`server.js`** at app root; `node_modules` came with standalone; **Restart** after env changes. |
-| Paystack / wrong domain | `NEXT_PUBLIC_SITE_URL` exactly **`https://fizam.ng`** (rebuild if changed). |
-| SQLite errors | `data/` exists and is **writable** (`chmod 775 data`). |
-| Windows `pnpm install` EPERM | Stop dev server; delete `node_modules`; retry. |
+```bash
+cd ~/fizam.ng
 
-For a short copy-paste checklist inside the artifact, see **`DEPLOY_NAMECHEAP.txt`** after extracting the inner ZIP (generated from `scripts/namecheap-DEPLOY.txt` at build time).
+# 1. Backup database
+cp -a data/fizam.db "data/fizam.db.bak-$(date +%Y%m%d)"
+
+# 2. Remove old app files (not data/)
+rm -rf node_modules .next next-dist src
+
+# 3. Upload & extract new artifact ZIP
+
+# 4. Post-extract setup
+bash scripts/namecheap-server-setup.sh
+# or manual steps from §6
+
+# 5. cPanel → Restart
+```
+
+If you added Payload migrations in this release, restart once — they run on boot in Production.
+
+Rebuild CI when you change **`NEXT_PUBLIC_*`** or schema (migrations).
+
+---
+
+## 9. Smoke tests
+
+```bash
+cd ~/fizam.ng
+: > stderr.log
+curl -sI "https://fizam.ng/" | head -5
+curl -sI "https://fizam.ng/admin" | head -5
+tail -20 stderr.log
+```
+
+Expect **`HTTP/2 200`** on `/` and `/admin`. Empty `stderr.log` after requests is ideal.
+
+Browser:
+
+| URL | Expect |
+|-----|--------|
+| `https://fizam.ng` | Homepage |
+| `https://fizam.ng/admin` | Payload login |
+| `https://fizam.ng/order` | Checkout (Paystack configured) |
+
+**Note:** `curl http://127.0.0.1:3000` often fails — the app binds to the host name, not localhost. Use `https://fizam.ng` or `http://premiumXXX.web-hosting.com:3000`.
+
+---
+
+## 10. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|--------|-----|
+| **503** | Node app not running | `tail -50 stderr.log`; cPanel **Restart**; test `node server.js` in SSH with env vars |
+| **500** + `MODULE_NOT_FOUND` semver | Incomplete `node_modules` | §6 — install `semver@7` in **venv** |
+| **500** + sharp CPU v2 | sharp 0.34+ on old CPU | §6 — `sharp@0.33.5` in venv; remove wasm |
+| **500** + Wasm OOM | `sharp-wasm32` | `rm -rf .../node_modules/@img/sharp-wasm32`; use 0.33.5 |
+| **500** + `no such table: …` | Empty or stale DB | Upload dev `fizam.db` or run migrations (§7) |
+| `npm install` refused in app root | CloudLinux symlink rule | §6 — merge into venv, never `npm install --prefix .` |
+| `EBADPLATFORM` wasm32 | npm blocks wasm on x64 | Do not install wasm; use sharp 0.33.5 |
+| Site works, images broken in admin | sharp / media paths | Check `data/`, `public/media`, Payload uploads |
+| Paystack wrong URL | Stale build | Rebuild CI with correct `NEXT_PUBLIC_SITE_URL` |
+| 502 after env change | App not restarted | **Save** + **Restart** in cPanel |
+| `.next` / BUILD_ID missing | Forgot rename | `mv next-dist .next` |
+
+### Useful SSH commands
+
+```bash
+# App root
+cd ~/fizam.ng
+
+# Logs
+tail -40 stderr.log
+
+# DB tables
+sqlite3 data/fizam.db ".tables"
+
+# node_modules is symlink?
+ls -la node_modules
+
+# Manual start (debug)
+source ~/nodevenv/fizam.ng/24/bin/activate
+export PAYLOAD_SECRET='...'
+export DATABASE_URI='file:./data/fizam.db'
+export NEXT_PUBLIC_SITE_URL='https://fizam.ng'
+node server.js
+```
+
+---
+
+## 11. What is *not* on the server
+
+The standalone artifact is **runtime-only**:
+
+| Not deployed | Use instead |
+|--------------|-------------|
+| `scripts/seed.ts`, `tsx` | Upload `fizam.db` or create admin in `/admin` |
+| Full `src/` (unless left from old deploy) | Bundled in `.next/server` |
+| `.env` | cPanel environment variables |
+| `pnpm` / devDependencies | CI build only |
+
+---
+
+## 12. Reference: files in the repo
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/namecheap-standalone-zip.yml` | CI workflow |
+| `scripts/package-namecheap-standalone.sh` | Build + merge deps + `next-dist/` |
+| `scripts/copy-standalone-runtime-deps.cjs` | Copies semver, libsql, sharp, etc. into bundle |
+| `scripts/namecheap-server-setup.sh` | Post-extract venv + sharp fix on server |
+| `scripts/namecheap-DEPLOY.txt` | Short checklist → copied to artifact as `DEPLOY_NAMECHEAP.txt` |
+| `src/migrations/` | SQL migrations (auto-run in Production when bundled) |
+| `src/payload.config.ts` | `prodMigrations` + `migrationDir` |
+| `.nvmrc` | Node 24.15.0 |
+| `.env.example` | All env var names |
+
+---
+
+## Quick checklist (printable)
+
+- [ ] CI workflow green → artifact downloaded  
+- [ ] Extracted to `~/fizam.ng` (`server.js` at root)  
+- [ ] `mv next-dist .next`  
+- [ ] `bash scripts/namecheap-server-setup.sh` (or §6 manual)  
+- [ ] `data/fizam.db` present (uploaded or migrated)  
+- [ ] cPanel: Node **24**, **Production**, startup **`server.js`**  
+- [ ] Env: `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, Paystack, SMTP  
+- [ ] **Restart**  
+- [ ] `curl -I https://fizam.ng/` → **200**  
+- [ ] `curl -I https://fizam.ng/admin` → **200**  
+- [ ] Backup `data/fizam.db` on a schedule  
+
+---
+
+*Last updated: May 2026 — reflects production fixes for CloudLinux venv, sharp 0.33.5, semver, `next-dist`, and SQLite upload strategy.*

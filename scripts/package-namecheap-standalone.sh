@@ -27,6 +27,11 @@ if [[ -f data/.gitkeep ]]; then
 fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
+mkdir -p .next/standalone/scripts
+cp "$ROOT/scripts/namecheap-server-setup.sh" .next/standalone/scripts/namecheap-server-setup.sh
+chmod +x .next/standalone/scripts/namecheap-server-setup.sh 2>/dev/null || true
+mkdir -p .next/standalone/migrations
+cp -r "$ROOT/src/migrations/"* .next/standalone/migrations/
 
 # Standalone file tracing + pnpm symlinks omit nested runtime deps (libsql, react-dom, …).
 echo "Copying runtime dependency tree into standalone node_modules..."

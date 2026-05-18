@@ -95,7 +95,12 @@ for (const name of [
 
 // sharp optional deps are platform-specific; on Linux CI/production include linux-x64 bindings.
 if (process.platform === 'linux') {
-  for (const name of ['@img/sharp-linux-x64', '@img/sharp-libvips-linux-x64']) {
+  // Namecheap/shared hosts may lack x86-64-v2; wasm32 works everywhere (slower).
+  for (const name of [
+    '@img/sharp-linux-x64',
+    '@img/sharp-libvips-linux-x64',
+    '@img/sharp-wasm32',
+  ]) {
     seeds.add(name)
   }
 }

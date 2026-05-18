@@ -62,7 +62,7 @@ If you don’t have Git, re-download the file from the original ZIP.
 1. Stop the app.
 2. Delete `data/fizam.db` (back it up first if you’re unsure).
 3. Restart the app — Payload re-creates an empty DB on first request.
-4. Run `npm run seed` to repopulate demo data.
+4. On **local dev**, run `pnpm run seed`. On **Namecheap production**, upload `data/fizam.db` from dev or use migrations — see `docs/08-DEPLOY-NAMECHEAP.md` §7.
 
 ## Build (`npm run build`) fails with TypeScript errors
 
