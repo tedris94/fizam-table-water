@@ -113,6 +113,9 @@ importers:
       recharts:
         specifier: ^2.15.4
         version: 2.15.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      semver:
+        specifier: ^7.7.2
+        version: 7.8.0
       sharp:
         specifier: ^0.34.2
         version: 0.34.5
@@ -125,6 +128,13 @@ importers:
       tailwind-merge:
         specifier: ^3.2.0
         version: 3.5.0
+    optionalDependencies:
+      '@img/sharp-libvips-linux-x64':
+        specifier: 1.0.4
+        version: 1.0.4
+      '@img/sharp-linux-x64':
+        specifier: 0.34.5
+        version: 0.34.5
     devDependencies:
       '@libsql/client':
         specifier: ^0.17.3
@@ -903,6 +913,11 @@ packages:
   '@img/sharp-libvips-linux-s390x@1.2.4':
     resolution: {integrity: sha512-qmp9VrzgPgMoGZyPvrQHqk02uyjA0/QrTO26Tqk6l4ZV0MPWIW6LTkqOIov+J1yEu7MbFQaDpwdwJKhbJvuRxQ==}
     cpu: [s390x]
+    os: [linux]
+
+  '@img/sharp-libvips-linux-x64@1.0.4':
+    resolution: {integrity: sha512-MmWmQ3iPFZr0Iev+BAgVMb3ZyC4KeFc3jFxnNbEPas60e1cIfevbtuyf9nDGIzOaW9PdnDciJm+wFFaTlj5xYw==}
+    cpu: [x64]
     os: [linux]
 
   '@img/sharp-libvips-linux-x64@1.2.4':
@@ -5032,6 +5047,9 @@ snapshots:
     optional: true
 
   '@img/sharp-libvips-linux-s390x@1.2.4':
+    optional: true
+
+  '@img/sharp-libvips-linux-x64@1.0.4':
     optional: true
 
   '@img/sharp-libvips-linux-x64@1.2.4':

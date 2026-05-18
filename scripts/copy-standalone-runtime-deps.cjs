@@ -28,8 +28,21 @@ for (const entry of [
   } catch {}
 }
 
+function findInPnpmStore(name) {
+  const pnpmDir = path.join(root, 'node_modules', '.pnpm')
+  if (!fs.existsSync(pnpmDir)) return null
+  const slug = name.replace('/', '+')
+  const entry = fs.readdirSync(pnpmDir).find((e) => e === slug || e.startsWith(`${slug}@`))
+  if (!entry) return null
+  const candidate = path.join(pnpmDir, entry, 'node_modules', name)
+  if (fs.existsSync(path.join(candidate, 'package.json'))) return candidate
+  return null
+}
+
 function resolvePkgRoot(name) {
-  // @img/* packages resolve from sharp's dependency tree (pnpm nested layout).
+  const fromPnpm = findInPnpmStore(name)
+  if (fromPnpm) return fromPnpm
+
   if (name.startsWith('@img/')) {
     try {
       const req = createRequire(require.resolve('sharp/package.json'))
