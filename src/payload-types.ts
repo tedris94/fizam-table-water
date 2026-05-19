@@ -762,7 +762,18 @@ export interface SiteSetting {
   twitter?: string | null;
   linkedin?: string | null;
   defaultMetaTitle?: string | null;
+  /**
+   * Used in Google search snippets and social shares (150–160 characters ideal).
+   */
   defaultMetaDescription?: string | null;
+  /**
+   * Comma-separated SEO keywords (e.g. Fizam, Fizam Table Water, table water Nigeria).
+   */
+  defaultKeywords?: string | null;
+  /**
+   * Google Search Console verification code (content value only, not the full meta tag).
+   */
+  googleSiteVerification?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -810,6 +821,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   linkedin?: T;
   defaultMetaTitle?: T;
   defaultMetaDescription?: T;
+  defaultKeywords?: T;
+  googleSiteVerification?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
