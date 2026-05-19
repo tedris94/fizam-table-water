@@ -10,6 +10,13 @@ export BUILD_STANDALONE="${BUILD_STANDALONE:-1}"
 export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"
 
 pnpm install --frozen-lockfile
+
+# Next.js static generation runs Payload in parallel workers. Run migrations once here
+# so prodMigrations on connect only see an up-to-date schema (avoids SQLITE race errors).
+mkdir -p data
+export PAYLOAD_SECRET="${PAYLOAD_SECRET:-ci-build-placeholder-secret}"
+pnpm payload migrate
+
 pnpm run build:standalone
 
 if [[ ! -f .next/standalone/server.js ]]; then
