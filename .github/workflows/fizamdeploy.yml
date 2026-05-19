@@ -78,6 +78,14 @@ jobs:
       - name: Verify bundle
         run: test -f .next/standalone/next-dist/BUILD_ID
 
+      - name: Normalize FTP server directory
+        env:
+          RAW_DIR: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          DIR="${RAW_DIR:-fizam.ng}"
+          case "$DIR" in */) ;; *) DIR="${DIR}/" ;; esac
+          echo "FTP_SERVER_DIR=$DIR" >> "$GITHUB_ENV"
+
       - name: Deploy to Namecheap via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -86,7 +94,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           local-dir: ./.next/standalone/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || 'fizam.ng/' }}
+          server-dir: ${{ env.FTP_SERVER_DIR }}
           # Never wipe the live SQLite database or cPanel-only files.
           dangerous-clean-slate: false
           exclude: |
