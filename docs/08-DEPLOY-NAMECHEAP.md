@@ -85,7 +85,7 @@ On every push to **`main`**, GitHub builds the standalone bundle and uploads it 
 | `FTP_SERVER_DIR` | `fizam.ng/` | Optional. Remote folder under FTP home (trailing slash). Default: `fizam.ng/` |
 | `CI_BUILD_PAYLOAD_SECRET` | random hex | Optional. Build-time only |
 
-The workflow **excludes `data/**`** so your live **`fizam.db` is not overwritten**.
+The workflow **excludes `data/**`** so your live **`fizam.db` is not overwritten**, and **`node_modules/**`** (deps stay in the CloudLinux venv symlink). After you add new npm packages, run **`npm install`** in the venv once (see §5) or do a full **Namecheap standalone ZIP** deploy.
 
 **After each FTP deploy** (still required on Namecheap):
 

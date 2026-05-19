@@ -32,7 +32,7 @@ jobs:
   build-and-deploy:
     name: Build standalone and FTP deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
 
     env:
       BUILD_STANDALONE: '1'
@@ -95,11 +95,15 @@ jobs:
           port: ${{ secrets.FTP_PORT }}
           local-dir: ./.next/standalone/
           server-dir: ${{ env.FTP_SERVER_DIR }}
+          timeout: 120000
+          log-level: minimal
           # Never wipe the live SQLite database or cPanel-only files.
           dangerous-clean-slate: false
+          # node_modules lives in CloudLinux venv (see namecheap-server-setup.sh).
           exclude: |
             **/.git*
             **/.git*/**
+            **/node_modules/**
             **/data/**
             **/.env
             **/.env.*
