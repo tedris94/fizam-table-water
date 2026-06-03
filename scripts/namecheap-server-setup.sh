@@ -56,10 +56,12 @@ rm -rf "$VENV_NM/@img/sharp-wasm32"
   --include=optional --omit=dev --prefix "$VENV_LIB"
 
 "$NODE_BIN" -e "
-  const semver = require('semver/functions/coerce');
+  const coerce = require('semver/functions/coerce');
   const sharp = require('sharp');
   const v = require('sharp/package.json').version;
-  if (!semver(v)?.startsWith('0.33.')) {
+  const c = coerce(v);
+  const ver = c && c.version ? String(c.version) : null;
+  if (!ver || !ver.startsWith('0.33.')) {
     throw new Error('Expected sharp 0.33.x, got ' + v);
   }
   try {
