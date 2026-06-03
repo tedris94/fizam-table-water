@@ -47,6 +47,7 @@ flowchart LR
 | **Build** | `BUILD_STANDALONE=1` → flat bundle under `.next/standalone/` (shipped as artifact root). |
 | **Hosting quirk** | CloudLinux stores npm packages in `~/nodevenv/.../lib/node_modules` and expects `~/fizam.ng/node_modules` to be a **symlink** to that path. |
 | **CPU quirk** | Namecheap shared CPUs are often **x86-64-v1**. Use **sharp@0.33.5** (not 0.34.x native, not WebAssembly). |
+| **Memory quirk** | CloudLinux `ulimit -v` (~2GB). Node 24 WASM trap handler reserves ~10GB virtual mem → set **`NODE_OPTIONS=--disable-wasm-trap-handler`** in cPanel. |
 | **Artifacts quirk** | GitHub drops dot-folders. The bundle ships **`.next` as `next-dist/`** — rename on the server. |
 | **Database** | SQLite at `./data/fizam.db`. **Keep this file** across redeploys. |
 
@@ -139,7 +140,10 @@ Windows standalone builds often fail (symlinks). Use CI or WSL.
 | Application mode | **Production** |
 | Application root | `fizam.ng` → `/home/USER/fizam.ng` |
 | Application URL | `fizam.ng` (path empty = site root) |
-| Application startup file | **`server.js`** |
+| Application startup file | **`server.js`** (do **not** use `launcher.js` under `lsnode` — it spawns a child; LiteSpeed times out waiting for the parent to listen) |
+| `NODE_OPTIONS` (cPanel env, required) | `--disable-wasm-trap-handler --require /home/USER/fizam.ng/preload-sharp.cjs` |
+| `HOSTNAME` (cPanel env, required) | `0.0.0.0` |
+| `NODE_OPTIONS` (cPanel env, optional) | `--disable-wasm-trap-handler --require /home/USER/fizam.ng/preload-sharp.cjs` |
 
 Do **not** use `app.js` for the CI flat bundle.
 
@@ -206,6 +210,24 @@ cd ~/fizam.ng
 chmod +x scripts/namecheap-server-setup.sh
 bash scripts/namecheap-server-setup.sh
 ```
+
+### Option B — post-deploy helper script
+
+After every deployment, run the consolidated helper script:
+
+```bash
+cd ~/fizam.ng
+chmod +x scripts/namecheap-postdeploy.sh
+bash scripts/namecheap-postdeploy.sh
+```
+
+This script:
+
+- renames `next-dist` to `.next` if needed
+- restores missing `start.cjs` and `preload-sharp.cjs`
+- creates/updates `.htaccess` as required
+- merges runtime deps into CloudLinux venv
+- installs `semver` and `sharp@0.33.5`
 
 ### Option B — manual commands
 
@@ -361,6 +383,13 @@ Browser:
 | Paystack wrong URL | Stale build | Rebuild CI with correct `NEXT_PUBLIC_SITE_URL` |
 | 502 after env change | App not restarted | **Save** + **Restart** in cPanel |
 | `.next` / BUILD_ID missing | Forgot rename | `mv next-dist .next` |
+| **Index of /** (folder listing) | Node app not proxying domain | §4 — startup **`server.js`**, **Restart** |
+| `node: command not found` in SSH | `node` not on login PATH | `source ~/nodevenv/fizam.ng/24/bin/activate` or re-run `namecheap-server-setup.sh` |
+| cPanel **FileNotFoundError** on Restart | Broken venv / wrong startup / stale `.htaccess` | **Run NPM Install** in cPanel; startup **`server.js`**; remove bad `.htaccess` (see below) |
+| **503** + `WebAssembly.instantiate(): Out of memory` | Node 24 WASM cage +/or `sharp-wasm32` | cPanel **`NODE_OPTIONS=--disable-wasm-trap-handler --require …/preload-sharp.cjs`**; purge wasm32; `sharp@0.33.5` + libvips **1.0.4** |
+| **500** + `libvips-cpp.so.42: cannot open shared object` | Wrong/missing `@img/sharp-libvips-linux-x64` | Install **`@img/sharp-libvips-linux-x64@1.0.4`** (not `0.33.5`) with `sharp@0.33.5` |
+| Sharp OK in SSH, **503/500** on `https://` only | LiteSpeed ignores `PassengerEnvVar` | Use **`launcher.js`** startup + `SetEnv LD_LIBRARY_PATH` in `.htaccess` + libvips symlinks (see §6 / `namecheap-server-setup.sh`) |
+| **Request Timeout** on `https://fizam.ng` | `launcher.js` spawns child; **`lsnode` waits on parent** | Startup **`server.js`** + `HOSTNAME=0.0.0.0` + `NODE_OPTIONS` (not `launcher.js`) |
 
 ### Useful SSH commands
 
@@ -377,12 +406,25 @@ sqlite3 data/fizam.db ".tables"
 # node_modules is symlink?
 ls -la node_modules
 
-# Manual start (debug)
+# Manual start (debug) — always activate venv first (plain `node` is not on SSH PATH)
 source ~/nodevenv/fizam.ng/24/bin/activate
 export PAYLOAD_SECRET='...'
 export DATABASE_URI='file:./data/fizam.db'
 export NEXT_PUBLIC_SITE_URL='https://fizam.ng'
 node server.js
+
+# Stale .htaccess breaks Passenger (wrong node path / app.js)
+ls -la .htaccess 2>/dev/null && head -10 .htaccess
+# If it references CPANEL_USER, .nvm, or app.js — rename it:
+# mv .htaccess .htaccess.bak
+# Then cPanel → Node app → Restart (cPanel regenerates config)
+
+# libvips path for sharp under Passenger (must match your user + app name)
+LIBVIPS_LIB="$HOME/nodevenv/fizam.ng/24/lib/node_modules/@img/sharp-libvips-linux-x64/lib"
+grep LD_LIBRARY_PATH .htaccess 2>/dev/null || echo "PassengerEnvVar LD_LIBRARY_PATH \"$LIBVIPS_LIB\""
+
+# stderr.log empty + no node process → app not starting; find other logs:
+find ~/fizam.ng ~/nodevenv/fizam.ng ~/logs -name '*.log' -mmin -120 2>/dev/null | head -20
 ```
 
 ---
