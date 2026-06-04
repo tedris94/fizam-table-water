@@ -1,125 +1,52 @@
-# Archived: This workflow was used for Namecheap FTP deployment.
-# Now deploying via Vercel (automatic on main push).
-# Kept for reference; no active deployment.
-
-name: [ARCHIVED] Deploy fizam.ng (FTP)
+name: 🚀 Deploy to Vercel
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      next_public_site_url:
-        description: 'NEXT_PUBLIC_SITE_URL (no trailing slash)'
-        required: false
-        default: 'https://fizam.ng'
-        type: string
-
-concurrency:
-  group: fizamdeploy-ftp-${{ github.ref }}
-  cancel-in-progress: true
+      - dev
 
 jobs:
-  build-and-deploy:
-    name: Build standalone and FTP deploy
+  deploy:
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-
-    env:
-      BUILD_STANDALONE: '1'
-      NODE_OPTIONS: --no-deprecation
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
 
-      - name: Enable corepack (pnpm)
-        run: corepack enable && corepack prepare pnpm@9.15.4 --activate
-
-      - name: Use Node 24.15.0 + pnpm cache
-        uses: actions/setup-node@v5
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '24.15.0'
-          cache: 'pnpm'
+          node-version: 18.x
 
-      - name: Set NEXT_PUBLIC_SITE_URL
-        env:
-          INPUT_URL: ${{ inputs.next_public_site_url }}
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${INPUT_URL}" ]; then
-            URL="${INPUT_URL}"
-          else
-            URL="https://fizam.ng"
-          fi
-          echo "NEXT_PUBLIC_SITE_URL=$URL" >> "$GITHUB_ENV"
-
-      - name: Set build-time PAYLOAD_SECRET
-        env:
-          FROM_SECRET: ${{ secrets.CI_BUILD_PAYLOAD_SECRET }}
-        run: |
-          if [ -n "$FROM_SECRET" ]; then
-            echo "PAYLOAD_SECRET=$FROM_SECRET" >> "$GITHUB_ENV"
-          else
-            echo "PAYLOAD_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
-          fi
-
-      - name: Disable interactive prompts in CI
-        run: |
-          # Ensure libraries (prompts, etc.) detect CI and do not prompt interactively
-          echo "CI=true" >> "$GITHUB_ENV"
-          # Prevent Payload from asking to run migrations during build
-          echo "PAYLOAD_DISABLE_MIGRATIONS=true" >> "$GITHUB_ENV"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Payload migrations (non-interactive)
-        run: echo 'y' | pnpm run payload migrate
-
-      - name: Clear dev-mode flag from database
-        run: pnpm run db:clear-dev-mode
-
-      - name: Build standalone + merge assets
-        run: bash scripts/package-namecheap-standalone.sh
-
-      - name: Verify bundle
-        run: test -f .next/standalone/next-dist/BUILD_ID
-
-      - name: Normalize FTP server directory
-        env:
-          RAW_DIR: ${{ secrets.FTP_SERVER_DIR }}
-        run: |
-          DIR="${RAW_DIR:-fizam.ng}"
-          case "$DIR" in */) ;; *) DIR="${DIR}/" ;; esac
-          echo "FTP_SERVER_DIR=$DIR" >> "$GITHUB_ENV"
-
-      - name: Deploy to Namecheap via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: ./.next/standalone/
-          server-dir: ${{ env.FTP_SERVER_DIR }}
-          timeout: 120000
-          log-level: minimal
-          # Clean stale build files on the server while preserving live data and config.
-          dangerous-clean-slate: true
-          # node_modules lives in CloudLinux venv (see namecheap-server-setup.sh).
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/data/**
-            **/.env
-            **/.env.*
-            **/.htaccess
+          version: 8
 
-      - name: Post-deploy reminder
+      - name: 📥 Get pnpm store directory
+        shell: bash
         run: |
-          echo "::notice::FTP upload finished. On the server:"
-          echo "  1. cd ~/fizam.ng && bash scripts/namecheap-server-setup.sh"
-          echo "  2. cPanel → Node.js app → RESTART"
-          echo "See docs/08-DEPLOY-NAMECHEAP.md"
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 📚 Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 Install dependencies
+        run: pnpm install
+
+      - name: 🏗️ Build project
+        run: pnpm build
+
+      - name: 🚀 Deploy to Vercel
+        uses: vercel/action@main
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ github.ref == 'refs/heads/main' && '' || '--prod' }}
