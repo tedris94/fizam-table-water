@@ -2,8 +2,8 @@
 # https://docs.netlify.com/configure-builds/file-conventions/
 
 [build]
-  # Build command for Next.js standalone
-  command = "pnpm run build"
+  # Run migrations first (non-interactive), then build Next.js
+  command = "echo 'y' | pnpm run payload migrate && pnpm run build"
   # Directory to publish (Next.js standalone output)
   publish = ".next"
 

@@ -79,6 +79,9 @@ jobs:
           # Prevent Payload from asking to run migrations during build
           echo "PAYLOAD_DISABLE_MIGRATIONS=true" >> "$GITHUB_ENV"
 
+      - name: Run Payload migrations (non-interactive)
+        run: echo 'y' | pnpm run payload migrate
+
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 
