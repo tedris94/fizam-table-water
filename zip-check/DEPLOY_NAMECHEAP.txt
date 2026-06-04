@@ -1,0 +1,43 @@
+FIZAM — Namecheap cPanel (Node.js) deploy checklist
+===================================================
+
+From GitHub Actions: download the workflow artifact ZIP, open it, and use the
+inner file fizam-cpanel-upload.zip for cPanel File Manager (upload that file,
+then Extract into your application root).
+
+ZIP contents are meant to be extracted into your application root, e.g.
+  /home/<user>/fizam.ng
+so that server.js and package.json sit directly in that folder.
+
+Before extracting a new ZIP over an old deploy, delete node_modules/ (and .next/ if
+present) in that folder so incomplete modules from a previous upload are not kept.
+
+cPanel → Setup Node.js App
+--------------------------
+  Application root:     fizam.ng   (or full path /home/<user>/fizam.ng)
+  Application URL:     your domain, path empty for site root
+  Application startup:   server.js
+  Mode:                  Production
+
+Environment variables (cPanel → Node app → Environment variables)
+-----------------------------------------------------------------
+  NEXT_PUBLIC_SITE_URL     https://fizam.ng   (no trailing slash; must match live URL)
+  PAYLOAD_SECRET           long random hex (never reuse the CI build-only value)
+  PAYSTACK_SECRET_KEY      sk_live_... (or sk_test_...)
+  DATABASE_URI             optional; default is SQLite at ./data/fizam.db
+  SMTP_* / CONTACT_*       optional; see .env.example in the source repo
+
+After first upload
+------------------
+  mkdir -p data && chmod 775 data
+  Restart the Node.js application in cPanel.
+
+Optional: run seed / create admin once via SSH from this directory:
+  npx --yes tsx scripts/seed.ts
+(Requires uploading scripts + tsx or running from a dev machine against production DB — prefer one-time admin create via Payload if you skip seed.)
+
+Paystack
+--------
+  Callback uses NEXT_PUBLIC_SITE_URL — it must be https on production.
+
+Rebuild ZIP when you change NEXT_PUBLIC_* vars; those are inlined at build time.

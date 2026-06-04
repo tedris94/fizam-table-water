@@ -34,6 +34,10 @@ if [[ -f data/.gitkeep ]]; then
 fi
 
 cp "$ROOT/scripts/namecheap-DEPLOY.txt" .next/standalone/DEPLOY_NAMECHEAP.txt
+cp "$ROOT/start.cjs" .next/standalone/start.cjs
+cp "$ROOT/launcher.cjs" .next/standalone/launcher.cjs
+cp "$ROOT/launcher.js" .next/standalone/launcher.js
+cp "$ROOT/preload-sharp.cjs" .next/standalone/preload-sharp.cjs
 mkdir -p .next/standalone/scripts
 cp "$ROOT/scripts/namecheap-server-setup.sh" .next/standalone/scripts/namecheap-server-setup.sh
 chmod +x .next/standalone/scripts/namecheap-server-setup.sh 2>/dev/null || true

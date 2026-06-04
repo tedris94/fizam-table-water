@@ -10,6 +10,18 @@ process.env.NEXT_TELEMETRY_DISABLED = '1'
 process.env.PORT = process.env.PORT || '3000'
 
 const path = require('path')
+
+// LiteSpeed Passenger often ignores SetEnv / PassengerEnvVar for libvips.
+const libvipsLib = path.join(
+  __dirname,
+  'node_modules',
+  '@img',
+  'sharp-libvips-linux-x64',
+  'lib',
+)
+process.env.LD_LIBRARY_PATH = [libvipsLib, process.env.LD_LIBRARY_PATH]
+  .filter(Boolean)
+  .join(':')
 const fs = require('fs')
 
 const flatServer = path.join(__dirname, 'server.js')

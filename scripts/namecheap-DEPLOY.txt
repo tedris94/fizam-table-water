@@ -34,6 +34,8 @@ DATABASE (pick one)
 cPanel NODE APP
 ---------------
   Node 24.x (e.g. 24.15.0) | Mode: Production | Startup: server.js
+  NODE_OPTIONS=--disable-wasm-trap-handler --require /home/<user>/fizam.ng/preload-sharp.cjs
+  LD_LIBRARY_PATH=/home/<user>/nodevenv/fizam.ng/24/lib/node_modules/@img/sharp-libvips-linux-x64/lib
   Env: PAYLOAD_SECRET, NEXT_PUBLIC_SITE_URL=https://fizam.ng,
        PAYSTACK_SECRET_KEY, DATABASE_URI=file:./data/fizam.db, SMTP_*
 

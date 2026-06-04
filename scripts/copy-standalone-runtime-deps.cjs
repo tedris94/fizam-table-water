@@ -93,13 +93,12 @@ for (const name of [
   seeds.add(name)
 }
 
-// sharp optional deps are platform-specific; on Linux CI/production include linux-x64 bindings.
+// sharp optional deps are platform-specific. On Linux CI use 0.33.5 linux-x64 only.
+// Never copy @img/sharp-wasm32 — Namecheap shared hosting OOMs on Wasm (see docs/08-DEPLOY-NAMECHEAP.md).
 if (process.platform === 'linux') {
-  // Namecheap/shared hosts may lack x86-64-v2; wasm32 works everywhere (slower).
   for (const name of [
     '@img/sharp-linux-x64',
     '@img/sharp-libvips-linux-x64',
-    '@img/sharp-wasm32',
   ]) {
     seeds.add(name)
   }
