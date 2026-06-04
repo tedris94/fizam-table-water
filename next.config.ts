@@ -6,14 +6,13 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
-// Only emit the standalone bundle for Vercel/production deployments when explicitly asked.
-// On Windows the trace step needs symlink permissions (Developer Mode / admin), which most
-// dev machines don't have — so default builds stay a regular `.next/` output.
+// Standalone output is for self-hosted/Docker (Namecheap) only — not Vercel.
+// Vercel runs Next.js natively; enabling standalone there breaks tracing (symlinks on Windows,
+// redundant output on Linux) and is unnecessary per Next.js deployment docs.
 const isStandaloneBuild = process.env.BUILD_STANDALONE === '1'
-const isVercel = process.env.VERCEL === '1'
 
 const nextConfig: NextConfig = {
-  ...(isStandaloneBuild || isVercel
+  ...(isStandaloneBuild
     ? {
         output: 'standalone' as const,
         // Next resolves styled-jsx/package.json at boot; pnpm + standalone tracing can omit it.

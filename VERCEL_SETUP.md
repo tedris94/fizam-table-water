@@ -25,7 +25,7 @@ Add these secrets to your GitHub repository settings:
 Set these in your Vercel project settings:
 
 ### Required
-- `` - Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+- `PAYLOAD_SECRET` - Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
 - `NEXT_PUBLIC_SITE_URL` - Your production URL (e.g., https://fizam.ng)
 
 ### Optional (for CMS functionality)
