@@ -28,9 +28,24 @@ if (!fs.existsSync(databaseDir)) {
 }
 
 const databaseFile = path.join(databaseDir, 'fizam.db')
+const runtimeDatabaseFile =
+  process.env.VERCEL === '1'
+    ? path.join(process.env.TMPDIR || '/tmp', 'fizam.db')
+    : databaseFile
+
+if (process.env.VERCEL === '1') {
+  const runtimeDatabaseDir = path.dirname(runtimeDatabaseFile)
+  if (!fs.existsSync(runtimeDatabaseDir)) {
+    fs.mkdirSync(runtimeDatabaseDir, { recursive: true })
+  }
+  if (!fs.existsSync(runtimeDatabaseFile) && fs.existsSync(databaseFile)) {
+    fs.copyFileSync(databaseFile, runtimeDatabaseFile)
+  }
+}
+
 const sqliteUrl =
   process.env.DATABASE_URI ??
-  `file:${databaseFile.replace(/\\/g, '/')}`
+  `file:${runtimeDatabaseFile.replace(/\\/g, '/')}`
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'CHANGE_ME_DEV_ONLY',
