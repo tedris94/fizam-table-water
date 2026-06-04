@@ -1,4 +1,10 @@
+# Secrets (never upload)
 .env
-.env.*
-data/
-media/
+.env.local
+.env.*.local
+
+# SQLite DB at repo root only — do not use bare `data/` (matches src/data/)
+/data/
+
+# Payload uploads (local dev)
+/media/
