@@ -1,3 +1,4 @@
+import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
@@ -22,6 +23,10 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 const databaseDir = path.resolve(process.cwd(), 'data')
+if (!fs.existsSync(databaseDir)) {
+  fs.mkdirSync(databaseDir, { recursive: true })
+}
+
 const databaseFile = path.join(databaseDir, 'fizam.db')
 const sqliteUrl =
   process.env.DATABASE_URI ??
