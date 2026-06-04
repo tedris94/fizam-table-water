@@ -28,10 +28,17 @@ if (!fs.existsSync(databaseDir)) {
 }
 
 const databaseFile = path.join(databaseDir, 'fizam.db')
-const runtimeDatabaseFile =
-  process.env.VERCEL === '1'
-    ? path.join(process.env.TMPDIR || '/tmp', 'fizam.db')
-    : databaseFile
+const envDatabaseUri = process.env.DATABASE_URI
+const isLocalFileUri = (uri: string) => {
+  if (!uri.startsWith('file:')) return false
+  const pathPart = uri.slice(5)
+  return !path.isAbsolute(pathPart.replace(/^(\/\/|\\\\)/, ''))
+}
+const useTmpDatabase =
+  process.env.VERCEL === '1' && envDatabaseUri && isLocalFileUri(envDatabaseUri)
+const runtimeDatabaseFile = useTmpDatabase
+  ? path.join(process.env.TMPDIR || '/tmp', 'fizam.db')
+  : databaseFile
 
 if (process.env.VERCEL === '1') {
   const runtimeDatabaseDir = path.dirname(runtimeDatabaseFile)
@@ -44,8 +51,9 @@ if (process.env.VERCEL === '1') {
 }
 
 const sqliteUrl =
-  process.env.DATABASE_URI ??
-  `file:${runtimeDatabaseFile.replace(/\\/g, '/')}`
+  envDatabaseUri && !useTmpDatabase
+    ? envDatabaseUri
+    : `file:${runtimeDatabaseFile.replace(/\\/g, '/')}`
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'CHANGE_ME_DEV_ONLY',
