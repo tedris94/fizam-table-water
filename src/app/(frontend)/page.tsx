@@ -27,21 +27,27 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const payload = await getPayloadSingleton()
-  const home = await payload.findGlobal({ slug: 'home-page', depth: 1 })
+  let home = null
 
+  try {
+    const payload = await getPayloadSingleton()
+    home = await payload.findGlobal({ slug: 'home-page', depth: 1 })
+  } catch (error) {
+    console.error('Payload home-page fetch failed:', error)
+  }
+
+  const heroTitle = home?.heroTitle || 'Welcome to Fizam Table Water'
+  const heroSubtitle =
+    home?.heroSubtitle ||
+    'Order sachet, bottle, and dispenser water online with fast delivery across Nigeria.'
   const heroImage =
-    home.heroImage && typeof home.heroImage === 'object' && 'url' in home.heroImage
+    home?.heroImage && typeof home.heroImage === 'object' && 'url' in home.heroImage
       ? String(home.heroImage.url)
       : null
 
   return (
     <>
-      <Hero
-        heroTitle={home.heroTitle || undefined}
-        heroSubtitle={home.heroSubtitle || undefined}
-        heroImageUrl={heroImage}
-      />
+      <Hero heroTitle={heroTitle} heroSubtitle={heroSubtitle} heroImageUrl={heroImage} />
       <section
         id="about"
         className="border-b border-blue-100 bg-gradient-to-b from-white to-slate-50 py-12 md:py-16"
