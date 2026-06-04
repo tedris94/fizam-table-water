@@ -82,6 +82,9 @@ jobs:
       - name: Run Payload migrations (non-interactive)
         run: echo 'y' | pnpm run payload migrate
 
+      - name: Clear dev-mode flag from database
+        run: pnpm run db:clear-dev-mode
+
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 

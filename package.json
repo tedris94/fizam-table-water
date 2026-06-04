@@ -17,6 +17,7 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts",
+    "db:clear-dev-mode": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/clear-db-dev-mode.ts",
     "fix-indexes": "node scripts/fix-indexes.mjs",
     "package:namecheap": "bash scripts/package-namecheap-standalone.sh"
   },
@@ -57,7 +58,7 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.4",
     "semver": "^7.7.2",
-    "sharp": "^0.34.2",
+    "sharp": "0.33.5",
     "sonner": "^2.0.3",
     "styled-jsx": "5.1.6",
     "tailwind-merge": "^3.2.0"
@@ -77,8 +78,12 @@
     "typescript": "^5.7.3"
   },
   "optionalDependencies": {
-    "@img/sharp-libvips-linux-x64": "1.2.4",
-    "@img/sharp-linux-x64": "0.34.5",
-    "@img/sharp-wasm32": "0.34.5"
+    "@img/sharp-libvips-linux-x64": "1.0.4",
+    "@img/sharp-linux-x64": "0.33.5"
+  },
+  "overrides": {
+    "sharp": "0.33.5",
+    "@img/sharp-linux-x64": "0.33.5",
+    "@img/sharp-libvips-linux-x64": "1.0.4"
   }
 }
