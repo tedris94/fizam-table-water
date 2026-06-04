@@ -48,9 +48,10 @@ Open the [`docs/`](./docs) folder — read the files in order if you have never 
 6. [`docs/05-EDITING-CONTENT.md`](./docs/05-EDITING-CONTENT.md)
 7. [`docs/06-PAYSTACK-SETUP.md`](./docs/06-PAYSTACK-SETUP.md)
 8. [`docs/07-EMAIL-SETUP.md`](./docs/07-EMAIL-SETUP.md)
-9. [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md)
+9. [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md) — shared hosting (legacy)
 10. [`docs/09-TROUBLESHOOTING.md`](./docs/09-TROUBLESHOOTING.md)
-11. [`docs/10-SEO-GOOGLE.md`](./docs/10-SEO-GOOGLE.md) — sitemap, Search Console, ranking for “Fizam”
+11. [`docs/10-SEO-GOOGLE.md`](./docs/10-SEO-GOOGLE.md) — sitemap, Search Console, ranking for "Fizam"
+12. [`docs/11-DEPLOY-NETLIFY.md`](./docs/11-DEPLOY-NETLIFY.md) — **recommended** serverless deployment
 
 ---
 
@@ -79,10 +80,19 @@ See [`.env.example`](./.env.example) for the full list. The most important ones:
 
 ---
 
-## ☁️ Deploy to Namecheap Stellar
+## ☁️ Deploy
 
-See [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md) for click-by-click instructions. Short version:
+### Recommended: Netlify (serverless, auto-scaling)
 
-1. Prefer **GitHub Actions → “Namecheap standalone ZIP”** (see `docs/08-DEPLOY-NAMECHEAP.md`).
-2. cPanel → **Setup Node.js App** → Node **24.15.0** (or latest **24.x** offered) → startup file **`server.js`** for the CI flat bundle (or `app.js` only for the legacy full-tree layout).
-3. Add env vars in cPanel UI, click **Restart App**.
+See [`docs/11-DEPLOY-NETLIFY.md`](./docs/11-DEPLOY-NETLIFY.md) for step-by-step. Quick version:
+
+1. Push to GitHub.
+2. Connect repo to Netlify.
+3. Set env vars in Netlify UI.
+4. Netlify auto-deploys on every push.
+
+No servers, no scaling issues, no environment complexity. Ideal for Next.js.
+
+### Alternative: Namecheap Stellar (shared hosting)
+
+See [`docs/08-DEPLOY-NAMECHEAP.md`](./docs/08-DEPLOY-NAMECHEAP.md) if you prefer cPanel hosting. Requires manual Sharp/venv setup.
