@@ -1,0 +1,45 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "nodeVersion": "18.x",
+  "regions": ["iad1"],
+  "env": {
+    "PAYLOAD_SECRET": {
+      "description": "Secret key for signing JWT and cookies (generate with: node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\")"
+    },
+    "NEXT_PUBLIC_SITE_URL": {
+      "description": "Public URL of the site (used for Paystack callbacks)"
+    },
+    "DATABASE_URI": {
+      "description": "SQLite connection string. Optional - app works without CMS DB"
+    },
+    "PAYSTACK_SECRET_KEY": {
+      "description": "Paystack secret key (get from https://dashboard.paystack.com)"
+    },
+    "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY": {
+      "description": "Paystack public key"
+    },
+    "SMTP_HOST": {
+      "description": "Email SMTP server hostname"
+    },
+    "SMTP_PORT": {
+      "description": "Email SMTP port (usually 587)"
+    },
+    "SMTP_USER": {
+      "description": "Email SMTP username"
+    },
+    "SMTP_PASS": {
+      "description": "Email SMTP password"
+    },
+    "CONTACT_NOTIFY_EMAIL": {
+      "description": "Email address for contact form notifications"
+    },
+    "HR_NOTIFY_EMAIL": {
+      "description": "Email address for job application notifications"
+    }
+  },
+  "redirects": [],
+  "rewrites": [],
+  "headers": []
+}

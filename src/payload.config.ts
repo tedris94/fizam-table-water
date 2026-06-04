@@ -22,34 +22,47 @@ import { HomePage } from './globals/HomePage'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+// Determine database path - gracefully handle missing DB for frontend-only deployments
 const databaseDir = path.resolve(process.cwd(), 'data')
-if (!fs.existsSync(databaseDir)) {
-  fs.mkdirSync(databaseDir, { recursive: true })
-}
-
 const databaseFile = path.join(databaseDir, 'fizam.db')
 const envDatabaseUri = process.env.DATABASE_URI
+
 const isLocalFileUri = (uri: string) => {
   if (!uri.startsWith('file:')) return false
   const pathPart = uri.slice(5)
   return !path.isAbsolute(pathPart.replace(/^(\/\/|\\\\)/, ''))
 }
+
+// On Vercel: use temp directory for SQLite since /data is ephemeral
 const useTmpDatabase =
   process.env.VERCEL === '1' && envDatabaseUri && isLocalFileUri(envDatabaseUri)
+
 const runtimeDatabaseFile = useTmpDatabase
   ? path.join(process.env.TMPDIR || '/tmp', 'fizam.db')
   : databaseFile
 
+// Ensure database directory exists
 if (process.env.VERCEL === '1') {
   const runtimeDatabaseDir = path.dirname(runtimeDatabaseFile)
-  if (!fs.existsSync(runtimeDatabaseDir)) {
-    fs.mkdirSync(runtimeDatabaseDir, { recursive: true })
+  try {
+    if (!fs.existsSync(runtimeDatabaseDir)) {
+      fs.mkdirSync(runtimeDatabaseDir, { recursive: true })
+    }
+    // Try to copy seed database if available
+    if (!fs.existsSync(runtimeDatabaseFile) && fs.existsSync(databaseFile)) {
+      fs.copyFileSync(databaseFile, runtimeDatabaseFile)
+    }
+  } catch (e) {
+    console.warn('Could not set up Vercel temp database:', e)
   }
-  if (!fs.existsSync(runtimeDatabaseFile) && fs.existsSync(databaseFile)) {
-    fs.copyFileSync(databaseFile, runtimeDatabaseFile)
+} else {
+  // Ensure data directory exists locally
+  if (!fs.existsSync(databaseDir)) {
+    fs.mkdirSync(databaseDir, { recursive: true })
   }
 }
 
+// Build SQLite URL - fallback to temp if needed
 const sqliteUrl =
   envDatabaseUri && !useTmpDatabase
     ? envDatabaseUri

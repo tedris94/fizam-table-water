@@ -1,16 +1,8 @@
-# Build Next.js standalone (same as namecheap-standalone-zip) and deploy to Namecheap via FTP.
-#
-# Required repository secrets:
-#   FTP_HOST, FTP_USERNAME, FTP_PASSWORD, FTP_PORT
-#
-# Optional:
-#   FTP_SERVER_DIR     — remote folder under FTP home (default: fizam.ng/)
-#   CI_BUILD_PAYLOAD_SECRET — build-time PAYLOAD_SECRET only
-#
-# After deploy: run scripts/namecheap-server-setup.sh on the server (SSH) and
-# Restart the Node app in cPanel. See docs/08-DEPLOY-NAMECHEAP.md.
+# Archived: This workflow was used for Namecheap FTP deployment.
+# Now deploying via Vercel (automatic on main push).
+# Kept for reference; no active deployment.
 
-name: Deploy fizam.ng (FTP)
+name: [ARCHIVED] Deploy fizam.ng (FTP)
 
 on:
   push:
