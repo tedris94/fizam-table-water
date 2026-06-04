@@ -12,15 +12,15 @@ const dirname = path.dirname(__filename)
 const isStandaloneBuild = process.env.BUILD_STANDALONE === '1'
 
 const nextConfig: NextConfig = {
-  ...(isStandaloneBuild
-    ? {
-        output: 'standalone' as const,
-        // Next resolves styled-jsx/package.json at boot; pnpm + standalone tracing can omit it.
-        outputFileTracingIncludes: {
-          '/*': ['./node_modules/styled-jsx/**/*'],
-        },
-      }
-    : {}),
+  ...(isStandaloneBuild ? { output: 'standalone' as const } : {}),
+  // Include the SQLite database file so it's available inside serverless functions.
+  // On Netlify the deploy filesystem is read-only; payload.config copies it to /tmp at cold start.
+  outputFileTracingIncludes: {
+    '/**': [
+      './data/**',
+      ...(isStandaloneBuild ? ['./node_modules/styled-jsx/**/*'] : []),
+    ],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
