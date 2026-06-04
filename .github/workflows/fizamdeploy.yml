@@ -72,6 +72,13 @@ jobs:
             echo "PAYLOAD_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
           fi
 
+      - name: Disable interactive prompts in CI
+        run: |
+          # Ensure libraries (prompts, etc.) detect CI and do not prompt interactively
+          echo "CI=true" >> "$GITHUB_ENV"
+          # Prevent Payload from asking to run migrations during build
+          echo "PAYLOAD_DISABLE_MIGRATIONS=true" >> "$GITHUB_ENV"
+
       - name: Build standalone + merge assets
         run: bash scripts/package-namecheap-standalone.sh
 
