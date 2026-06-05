@@ -24,7 +24,13 @@ export const DEFAULT_KEYWORDS = [
 ]
 
 export function getSiteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://fizam.ng').replace(/\/$/, '')
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'https://fizam.ng').trim()
+  if (!raw) return 'https://fizam.ng'
+
+  const withProtocol =
+    /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`
+
+  return withProtocol.replace(/\/$/, '')
 }
 
 export function absoluteUrl(path = ''): string {
@@ -62,11 +68,18 @@ export function buildPageMetadata({
       : absoluteUrl(image)
     : absoluteUrl('/icon.svg')
 
+  let metadataBase: URL
+  try {
+    metadataBase = new URL(siteUrl)
+  } catch {
+    metadataBase = new URL('https://fizam.ng')
+  }
+
   return {
     title: metaTitle,
     description: metaDescription,
     keywords: keywords ?? DEFAULT_KEYWORDS,
-    metadataBase: new URL(siteUrl),
+    metadataBase,
     alternates: {
       canonical,
     },

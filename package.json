@@ -48,7 +48,9 @@
     "cross-env": "^7.0.3",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.7",
+    "@libsql/client": "^0.17.3",
     "graphql": "^16.8.1",
+    "libsql": "^0.5.28",
     "lucide-react": "^0.487.0",
     "motion": "^12.23.24",
     "next": "15.4.11",
@@ -65,7 +67,6 @@
     "tailwind-merge": "^3.2.0"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.3",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.17",
@@ -80,7 +81,9 @@
   },
   "optionalDependencies": {
     "@img/sharp-libvips-linux-x64": "1.0.4",
-    "@img/sharp-linux-x64": "0.33.5"
+    "@img/sharp-linux-x64": "0.33.5",
+    "@libsql/linux-x64-gnu": "0.5.29",
+    "@libsql/linux-x64-musl": "0.5.29"
   },
   "overrides": {
     "sharp": "0.33.5",

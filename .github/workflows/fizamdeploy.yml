@@ -15,10 +15,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🚀 Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          working-directory: ./
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            DEPLOY_ARGS="--prod"
+          else
+            DEPLOY_ARGS=""
+          fi
+          # Vercel builds on their infra (install + next build). Do not use deprecated CLI v25.
+          npx vercel@latest deploy $DEPLOY_ARGS \
+            --token "$VERCEL_TOKEN" \
+            --yes

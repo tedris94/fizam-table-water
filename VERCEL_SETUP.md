@@ -26,10 +26,11 @@ Set these in your Vercel project settings:
 
 ### Required
 - `PAYLOAD_SECRET` - Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-- `NEXT_PUBLIC_SITE_URL` - Your production URL (e.g., https://fizam.ng)
+- `NEXT_PUBLIC_SITE_URL` - Full site URL **with `https://`** (e.g. `https://fizam.ng` or `https://fizam-table-water.vercel.app`). Values without a protocol break dynamic pages at runtime.
 
-### Optional (for CMS functionality)
-- `DATABASE_URI` - SQLite connection string (app works without it)
+### Optional (for CMS functionality on Vercel)
+- `DATABASE_URI` - **Remote only on Vercel** (e.g. Turso `libsql://...`). Do **not** use `file:./data/fizam.db` on Vercel — it is ephemeral and breaks serverless. Without a remote URI, the marketing site still runs; `/admin` needs Turso.
+- `DISABLE_PAYLOAD` - Set to `1` to force frontend-only mode (rarely needed)
 - `PAYSTACK_SECRET_KEY` & `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` - Payment processing
 - `SMTP_*` - Email configuration
 - `CONTACT_NOTIFY_EMAIL` & `HR_NOTIFY_EMAIL` - Notification emails

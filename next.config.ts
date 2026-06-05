@@ -12,12 +12,26 @@ const dirname = path.dirname(__filename)
 const isStandaloneBuild = process.env.BUILD_STANDALONE === '1'
 
 const nextConfig: NextConfig = {
+  // Payload SQLite / libsql native bindings must not be webpack-bundled on Vercel.
+  serverExternalPackages: [
+    '@payloadcms/db-sqlite',
+    '@libsql/client',
+    'libsql',
+    'payload',
+  ],
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/libsql/**/*', './node_modules/@libsql/**/*'],
+  },
   ...(isStandaloneBuild
     ? {
         output: 'standalone' as const,
         // Next resolves styled-jsx/package.json at boot; pnpm + standalone tracing can omit it.
         outputFileTracingIncludes: {
-          '/*': ['./node_modules/styled-jsx/**/*'],
+          '/*': [
+            './node_modules/styled-jsx/**/*',
+            './node_modules/libsql/**/*',
+            './node_modules/@libsql/**/*',
+          ],
         },
       }
     : {}),
