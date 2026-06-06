@@ -9,7 +9,7 @@ import { buildPageMetadata, DEFAULT_KEYWORDS, titleWithBrand } from '@/lib/seo'
 export const metadata = buildPageMetadata({
   title: titleWithBrand('About Fizam — Alfurat Nigeria Limited'),
   description:
-    'About Fizam Table Water (fizam.ng): a product of Alfurat Nigeria Limited. Premium 50cl & 75cl bottled water and sachet water — reverse osmosis and ozonization purification for FCT and Nigeria.',
+    'About Fizam Table Water (fizam.ng) by Alfurat Nigeria Limited — premium bottled & sachet water, reverse osmosis purification, serving FCT and Nigeria.',
   path: '/about',
   image: '/images/factory.png',
   keywords: [

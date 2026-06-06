@@ -19,10 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Fizam — Official fizam.ng | Fizam Table Water Nigeria',
     description:
-      'Fizam (fizam.ng) is the official Fizam Table Water website by Alfurat Nigeria Limited. Order NAFDAC-certified sachet, 50cl & 75cl bottled water online — delivery across FCT and Nigeria.',
+      'Official Fizam Table Water (fizam.ng). NAFDAC-certified sachet & bottled water by Alfurat Nigeria Limited. Order online in FCT and Nigeria.',
     path: '/',
     keywords: ['Fizam', 'fizam', 'fizam.ng', 'Fizam official', 'Fizam Table Water', ...settings.defaultKeywords],
-    image: settings.logoUrl || '/images/og-image.png',
   })
 }
 

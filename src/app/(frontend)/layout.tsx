@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: settings.defaultMetaDescription,
     path: '/',
     keywords: settings.defaultKeywords,
-    image: settings.logoUrl || DEFAULT_OG_IMAGE,
+    image: DEFAULT_OG_IMAGE,
   })
 
   if (settings.googleSiteVerification) {

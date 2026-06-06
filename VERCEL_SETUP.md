@@ -26,7 +26,7 @@ Set these in your Vercel project settings:
 
 ### Required
 - `PAYLOAD_SECRET` - Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-- `NEXT_PUBLIC_SITE_URL` - Full site URL **with `https://`** (e.g. `https://fizam.ng` or `https://fizam-table-water.vercel.app`). Values without a protocol break dynamic pages at runtime.
+- `NEXT_PUBLIC_SITE_URL` - Full site URL **with `https://`**, preferably **`https://www.fizam.ng`** (matches your www redirect — required for WhatsApp link previews). Values without a protocol break dynamic pages at runtime.
 
 ### Optional (for CMS functionality on Vercel)
 - `DATABASE_URI` - **Remote only on Vercel** (e.g. Turso `libsql://...`). Do **not** use `file:./data/fizam.db` on Vercel — it is ephemeral and breaks serverless. Without a remote URI, the marketing site still runs; `/admin` needs Turso.

@@ -20,7 +20,8 @@
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts",
     "db:clear-dev-mode": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/clear-db-dev-mode.ts",
     "fix-indexes": "node scripts/fix-indexes.mjs",
-    "package:namecheap": "bash scripts/package-namecheap-standalone.sh"
+    "package:namecheap": "bash scripts/package-namecheap-standalone.sh",
+    "optimize:social-images": "node scripts/optimize-social-images.mjs"
   },
   "dependencies": {
     "@payloadcms/db-sqlite": "3.82.1",

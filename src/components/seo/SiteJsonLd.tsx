@@ -18,6 +18,7 @@ export async function SiteJsonLd() {
   ) as string[]
   const siteUrl = absoluteUrl('/')
   const ogImage = absoluteUrl(DEFAULT_OG_IMAGE)
+  const logoImage = absoluteUrl('/images/logo.png')
 
   const brand = {
     '@context': 'https://schema.org',
@@ -26,7 +27,7 @@ export async function SiteJsonLd() {
     name: SITE_SHORT_NAME,
     alternateName: ['Fizam', 'FIZAM', 'Fizam Water', SITE_DOMAIN],
     url: siteUrl,
-    logo: absoluteUrl('/images/logo.png'),
+    logo: logoImage,
     slogan: 'Purity, Refreshment, and Quality You Can Trust',
     description: settings.defaultMetaDescription,
   }
@@ -39,7 +40,7 @@ export async function SiteJsonLd() {
     legalName: 'Alfurat Nigeria Limited',
     alternateName: ['Fizam', 'FIZAM', 'Fizam Water', SITE_DOMAIN, 'fizam.ng'],
     url: siteUrl,
-    logo: absoluteUrl('/images/logo.png'),
+    logo: logoImage,
     image: ogImage,
     description: settings.defaultMetaDescription,
     email: settings.contactEmail || undefined,

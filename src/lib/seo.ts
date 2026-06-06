@@ -3,17 +3,17 @@ import type { Metadata } from 'next'
 export const SITE_NAME = 'Fizam Table Water'
 export const SITE_SHORT_NAME = 'Fizam'
 export const SITE_DOMAIN = 'fizam.ng'
-export const DEFAULT_TITLE =
-  'Fizam — Official fizam.ng | Fizam Table Water Nigeria'
+export const DEFAULT_TITLE = 'Fizam — Official fizam.ng | Table Water Nigeria'
 export const DEFAULT_DESCRIPTION =
-  'Fizam (fizam.ng) is the official Fizam Table Water website — premium bottled and sachet drinking water by Alfurat Nigeria Limited. NAFDAC-certified purification for homes and businesses across Nigeria.'
+  'Official Fizam Table Water (fizam.ng). NAFDAC-certified sachet & bottled water by Alfurat Nigeria Limited. Order online in FCT and Nigeria.'
 
-/** Default share image for WhatsApp, Facebook, Twitter/X, and LinkedIn. */
-export const DEFAULT_OG_IMAGE = '/images/og-image.png'
+/** JPEG 1200×630, optimized for WhatsApp (< 600 KB). */
+export const DEFAULT_OG_IMAGE = '/images/og-image.jpg'
 export const DEFAULT_OG_IMAGE_WIDTH = 1200
 export const DEFAULT_OG_IMAGE_HEIGHT = 630
+export const DEFAULT_OG_IMAGE_TYPE = 'image/jpeg'
 export const DEFAULT_OG_IMAGE_ALT =
-  'Fizam Table Water — official fizam.ng brand, bottled and sachet water Nigeria'
+  'Fizam Table Water — official fizam.ng, bottled and sachet water Nigeria'
 
 /** Primary keywords for brand + category search in Nigeria. */
 export const DEFAULT_KEYWORDS = [
@@ -35,9 +35,20 @@ export const DEFAULT_KEYWORDS = [
   'order table water online',
 ]
 
+const OG_DESCRIPTION_MAX = 155
+
+/** Keep share previews within WhatsApp / Facebook recommended length. */
+export function trimShareDescription(text: string, max = OG_DESCRIPTION_MAX): string {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  if (normalized.length <= max) return normalized
+  const cut = normalized.slice(0, max - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > 80 ? cut.slice(0, lastSpace) : cut).trim()}…`
+}
+
 export function getSiteUrl(): string {
-  const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'https://fizam.ng').trim()
-  if (!raw) return 'https://fizam.ng'
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.fizam.ng').trim()
+  if (!raw) return 'https://www.fizam.ng'
 
   const withProtocol =
     /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`
@@ -52,7 +63,7 @@ export function absoluteUrl(path = ''): string {
 }
 
 export function resolveOgImage(image?: string | null): string {
-  if (!image) return absoluteUrl(DEFAULT_OG_IMAGE)
+  if (!image || image === '/images/og-image.png') return absoluteUrl(DEFAULT_OG_IMAGE)
   return image.startsWith('http') ? image : absoluteUrl(image)
 }
 
@@ -78,15 +89,16 @@ export function buildPageMetadata({
   const siteUrl = getSiteUrl()
   const canonical = absoluteUrl(path)
   const metaTitle = title ?? DEFAULT_TITLE
-  const metaDescription = description ?? DEFAULT_DESCRIPTION
+  const metaDescription = trimShareDescription(description ?? DEFAULT_DESCRIPTION)
   const ogImage = resolveOgImage(image)
   const ogImageAlt = image ? `${SITE_NAME} — ${metaTitle}` : DEFAULT_OG_IMAGE_ALT
+  const ogImageType = ogImage.endsWith('.png') ? 'image/png' : DEFAULT_OG_IMAGE_TYPE
 
   let metadataBase: URL
   try {
     metadataBase = new URL(siteUrl)
   } catch {
-    metadataBase = new URL('https://fizam.ng')
+    metadataBase = new URL('https://www.fizam.ng')
   }
 
   return {
@@ -100,6 +112,14 @@ export function buildPageMetadata({
     authors: [{ name: SITE_NAME, url: absoluteUrl('/') }],
     creator: SITE_NAME,
     publisher: SITE_NAME,
+    icons: {
+      icon: [
+        { url: '/images/favicon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/images/favicon-192.png', sizes: '192x192', type: 'image/png' },
+      ],
+      apple: [{ url: '/images/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+      shortcut: '/images/favicon-32.png',
+    },
     robots: noIndex
       ? { index: false, follow: false }
       : {
@@ -126,7 +146,7 @@ export function buildPageMetadata({
           width: DEFAULT_OG_IMAGE_WIDTH,
           height: DEFAULT_OG_IMAGE_HEIGHT,
           alt: ogImageAlt,
-          type: 'image/png',
+          type: ogImageType,
         },
       ],
     },
@@ -142,16 +162,6 @@ export function buildPageMetadata({
     other: {
       'geo.region': 'NG',
       'geo.placename': 'Nigeria',
-      // Explicit OG tags for WhatsApp, Facebook, LinkedIn crawlers
-      'og:image': ogImage,
-      'og:image:secure_url': ogImage,
-      'og:image:url': ogImage,
-      'og:image:width': String(DEFAULT_OG_IMAGE_WIDTH),
-      'og:image:height': String(DEFAULT_OG_IMAGE_HEIGHT),
-      'og:image:alt': ogImageAlt,
-      'og:image:type': 'image/png',
-      'og:site_name': SITE_NAME,
-      'og:locale': 'en_NG',
     },
   }
 }
