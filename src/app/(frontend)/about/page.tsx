@@ -1,33 +1,51 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import path from 'path'
-import { access } from 'fs/promises'
-import { Award, Building2, Droplets, Shield, Target } from 'lucide-react'
+import { Award, Droplets, Factory, Shield } from 'lucide-react'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
-
-import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
+import { buildPageMetadata, DEFAULT_KEYWORDS, titleWithBrand } from '@/lib/seo'
 
 export const metadata = buildPageMetadata({
-  title: titleWithBrand('About Fizam — Our Story & Mission'),
+  title: titleWithBrand('About Fizam — Alfurat Nigeria Limited'),
   description:
-    'About Fizam Table Water: NAFDAC-certified drinking water for Nigerian homes. Learn who we are, our quality standards, and our production story at fizam.ng.',
+    'About Fizam Table Water (fizam.ng): a product of Alfurat Nigeria Limited. Premium 50cl & 75cl bottled water and sachet water — reverse osmosis and ozonization purification for FCT and Nigeria.',
   path: '/about',
+  image: '/images/factory.png',
+  keywords: [
+    'Fizam',
+    'fizam.ng',
+    'About Fizam',
+    'Alfurat Nigeria Limited',
+    'Fizam Table Water',
+    ...DEFAULT_KEYWORDS,
+  ],
 })
 
-async function hasFactoryPhoto(): Promise<boolean> {
-  try {
-    await access(path.join(process.cwd(), 'public', 'images', 'factory.jpg'))
-    return true
-  } catch {
-    return false
-  }
-}
+const HIGHLIGHTS = [
+  {
+    icon: Shield,
+    title: 'Quality & safety first',
+    text: 'Advanced purification including reverse osmosis and ozonization removes chemical, organic, inorganic, and biological contaminants.',
+  },
+  {
+    icon: Droplets,
+    title: 'Fresh in every sip',
+    text: 'Bottled water (50cl and 75cl) and sachet water produced for freshness, purity, and satisfaction.',
+  },
+  {
+    icon: Factory,
+    title: 'Modern production',
+    text: 'State-of-the-art facilities and disciplined processes support dependable supply for homes and businesses.',
+  },
+  {
+    icon: Award,
+    title: 'Serving FCT & beyond',
+    text: 'Positioned to deliver highly purified, refreshing water across the Federal Capital Territory and Nigeria.',
+  },
+] as const
 
-export default async function AboutPage() {
-  const showFactoryImage = await hasFactoryPhoto()
-
+export default function AboutPage() {
   return (
     <>
       <SimpleNavbar />
@@ -46,49 +64,41 @@ export default async function AboutPage() {
               </ol>
             </nav>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#1a1f71] md:text-5xl">
-              About FIZAM Table Water
+              About Us
             </h1>
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-600">
-              We produce clean, great-tasting table water for families and businesses across
-              Nigeria—with the certifications and care you expect from a brand you can trust.
+            <p className="mt-6 text-lg font-medium text-[#2563eb]">
+              Fizam Table Water — Purity, Refreshment, and Quality You Can Trust.
             </p>
           </div>
         </div>
 
-        <div className="container mx-auto max-w-5xl px-4 py-16 md:py-20">
-          <div className="grid gap-12 md:grid-cols-2 md:items-start">
-            <div>
-              <h2 className="text-2xl font-bold text-[#1a1f71] md:text-3xl">Our story</h2>
-              <p className="mt-4 leading-relaxed text-gray-600">
-                FIZAM exists to take the guesswork out of hydration. Every batch is treated with
-                disciplined processes, trained people, and a simple belief: water should be safe,
-                affordable, and refreshingly easy to love.
-              </p>
-              <p className="mt-4 leading-relaxed text-gray-600">
-                From retail packs to wholesale and pickup at our facility, we are building a
-                dependable supply you can plan around—whether you are stocking your home or serving
-                your customers.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-8 shadow-sm">
-              <Target className="h-10 w-10 text-[#2563eb]" aria-hidden />
-              <h3 className="mt-4 text-xl font-semibold text-[#1a1f71]">What we stand for</h3>
-              <ul className="mt-4 space-y-3 text-gray-600">
-                <li className="flex gap-2">
-                  <span className="font-semibold text-[#1a1f71]">Quality</span> — standards you
-                  can verify, not just words on a label.
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-[#1a1f71]">Integrity</span> — honest pricing
-                  and clear communication at every touchpoint.
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-[#1a1f71]">Nigeria first</span> — built for
-                  local realities, from logistics to taste preferences.
-                </li>
-              </ul>
-            </div>
+        <div className="container mx-auto max-w-3xl px-4 py-14 md:py-16">
+          <div className="space-y-6 text-lg leading-relaxed text-gray-700">
+            <p>
+              <strong className="text-[#1a1f71]">Fizam Table Water</strong>, a product of{' '}
+              <strong className="text-[#1a1f71]">Alfurat Nigeria Limited</strong>, is committed to
+              delivering premium-quality drinking water designed to meet the hydration needs of
+              individuals, families, and businesses. Our product range includes bottled water (50cl
+              and 75cl) as well as sachet water, carefully produced to provide freshness, purity, and
+              satisfaction in every sip.
+            </p>
+            <p>
+              At Fizam, quality and safety remain our top priorities. Our water undergoes advanced
+              purification processes, including reverse osmosis and ozonization, ensuring the removal
+              of unwanted chemical substances, organic and inorganic impurities, and biological
+              contaminants. This guarantees clean, safe, and reliable drinking water that meets high
+              quality standards.
+            </p>
+            <p>
+              With modern production facilities and a commitment to excellence, Fizam Table Water is
+              positioned to serve the Federal Capital Territory (FCT) and beyond by providing highly
+              purified, refreshing water products that complement everyday life.
+            </p>
           </div>
+
+          <p className="mt-10 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white px-6 py-5 text-center text-xl font-semibold text-[#1a1f71]">
+            Fizam Table Water — Purity, Refreshment, and Quality You Can Trust.
+          </p>
         </div>
 
         <section className="border-y border-blue-100 bg-slate-50 py-16 md:py-20">
@@ -96,68 +106,35 @@ export default async function AboutPage() {
             <div className="mb-8 max-w-2xl">
               <h2 className="text-2xl font-bold text-[#1a1f71] md:text-3xl">Our facility</h2>
               <p className="mt-3 text-gray-600">
-                A glimpse of where your water is produced. Replace the placeholder below with your
-                own photography when ready.
+                A glimpse of where Fizam Table Water is produced — modern equipment and disciplined
+                processes for every batch.
               </p>
             </div>
 
-            {showFactoryImage ? (
-              <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5">
-                <Image
-                  src="/images/factory.jpg"
-                  alt="FIZAM production facility"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 1024px"
-                  priority
-                />
-              </div>
-            ) : (
-              <div className="relative flex aspect-[21/9] min-h-[220px] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#2563eb]/35 bg-gradient-to-br from-slate-100 via-white to-blue-50 text-center shadow-inner">
-                <Building2 className="h-14 w-14 text-[#1a1f71]/40" aria-hidden />
-                <p className="mt-4 px-4 text-lg font-semibold text-[#1a1f71]">
-                  Factory photo placeholder
-                </p>
-                <p className="mt-2 max-w-md px-4 text-sm text-gray-600">
-                  Add your image as{' '}
-                  <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-[#1a1f71] ring-1 ring-blue-100">
-                    public/images/factory.jpg
-                  </code>{' '}
-                  — this page will display it automatically. Recommended: wide landscape (e.g. 2400
-                  × 1000px or larger).
-                </p>
-              </div>
-            )}
+            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5">
+              <Image
+                src="/images/factory.png"
+                alt="Fizam Table Water production facility — Alfurat Nigeria Limited"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                priority
+              />
+            </div>
           </div>
         </section>
 
         <div className="container mx-auto max-w-5xl px-4 py-16 md:py-20">
           <h2 className="text-center text-2xl font-bold text-[#1a1f71] md:text-3xl">
-            Why customers choose FIZAM
+            Why customers choose Fizam
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {[
-              {
-                icon: Shield,
-                title: 'Certified quality',
-                text: 'Production aligned with regulatory expectations and internal checks you can rely on.',
-              },
-              {
-                icon: Droplets,
-                title: 'Pure & refreshing',
-                text: 'Filtration and treatment designed for clarity, consistency, and great taste.',
-              },
-              {
-                icon: Award,
-                title: 'Dependable supply',
-                text: 'Order for delivery or factory pickup—we are set up for both retail and bulk needs.',
-              },
-            ].map((item) => (
+          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            {HIGHLIGHTS.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-blue-100 bg-white p-6 text-center shadow-sm"
+                className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm"
               >
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a1f71] to-[#2563eb] text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a1f71] to-[#2563eb] text-white">
                   <item.icon className="h-6 w-6" aria-hidden />
                 </div>
                 <h3 className="mt-4 font-semibold text-[#1a1f71]">{item.title}</h3>

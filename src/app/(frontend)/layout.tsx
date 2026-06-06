@@ -4,7 +4,7 @@ import { SiteChrome } from '@/components/site/SiteChrome'
 import { PWARegister } from '@/components/PWARegister'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { inter } from '@/lib/fonts'
-import { buildPageMetadata } from '@/lib/seo'
+import { buildPageMetadata, DEFAULT_OG_IMAGE } from '@/lib/seo'
 import { getSiteSeoSettings } from '@/lib/site-settings-seo'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: settings.defaultMetaDescription,
     path: '/',
     keywords: settings.defaultKeywords,
-    image: settings.logoUrl,
+    image: settings.logoUrl || DEFAULT_OG_IMAGE,
   })
 
   if (settings.googleSiteVerification) {

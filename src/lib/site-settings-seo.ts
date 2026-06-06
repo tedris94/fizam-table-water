@@ -27,6 +27,7 @@ const FALLBACK: SiteSeoSettings = {
   defaultMetaTitle: DEFAULT_TITLE,
   defaultMetaDescription: DEFAULT_DESCRIPTION,
   defaultKeywords: DEFAULT_KEYWORDS,
+  logoUrl: '/images/og-image.png',
   contactEmail: 'hello@fizam.ng',
   contactPhone: '+234 800 000 0000',
   address: 'Lagos, Nigeria',

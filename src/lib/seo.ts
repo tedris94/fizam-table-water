@@ -2,23 +2,35 @@ import type { Metadata } from 'next'
 
 export const SITE_NAME = 'Fizam Table Water'
 export const SITE_SHORT_NAME = 'Fizam'
+export const SITE_DOMAIN = 'fizam.ng'
 export const DEFAULT_TITLE =
-  'Fizam | Fizam Table Water — NAFDAC Certified Drinking Water in Nigeria'
+  'Fizam — Official fizam.ng | Fizam Table Water Nigeria'
 export const DEFAULT_DESCRIPTION =
-  'Fizam (Fizam Table Water) delivers NAFDAC-certified sachet, bottle, and dispenser water across Nigeria. Order online at fizam.ng — pure hydration for every Nigerian home.'
+  'Fizam (fizam.ng) is the official Fizam Table Water website — premium bottled and sachet drinking water by Alfurat Nigeria Limited. NAFDAC-certified purification for homes and businesses across Nigeria.'
+
+/** Default share image for WhatsApp, Facebook, Twitter/X, and LinkedIn. */
+export const DEFAULT_OG_IMAGE = '/images/og-image.png'
+export const DEFAULT_OG_IMAGE_WIDTH = 1200
+export const DEFAULT_OG_IMAGE_HEIGHT = 630
+export const DEFAULT_OG_IMAGE_ALT =
+  'Fizam Table Water — official fizam.ng brand, bottled and sachet water Nigeria'
 
 /** Primary keywords for brand + category search in Nigeria. */
 export const DEFAULT_KEYWORDS = [
   'Fizam',
+  'fizam',
+  'fizam.ng',
   'Fizam Table Water',
   'Fizam water',
   'Fizam Nigeria',
-  'fizam.ng',
+  'Fizam official website',
+  'Alfurat Nigeria Limited',
   'table water Nigeria',
   'sachet water Nigeria',
   'pure water Nigeria',
   'NAFDAC certified water',
-  'bottled water Lagos',
+  'bottled water FCT',
+  'bottled water Abuja',
   'dispenser water Nigeria',
   'order table water online',
 ]
@@ -37,6 +49,11 @@ export function absoluteUrl(path = ''): string {
   const base = getSiteUrl()
   if (!path || path === '/') return base
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+export function resolveOgImage(image?: string | null): string {
+  if (!image) return absoluteUrl(DEFAULT_OG_IMAGE)
+  return image.startsWith('http') ? image : absoluteUrl(image)
 }
 
 export type PageSeoInput = {
@@ -62,11 +79,8 @@ export function buildPageMetadata({
   const canonical = absoluteUrl(path)
   const metaTitle = title ?? DEFAULT_TITLE
   const metaDescription = description ?? DEFAULT_DESCRIPTION
-  const ogImage = image
-    ? image.startsWith('http')
-      ? image
-      : absoluteUrl(image)
-    : absoluteUrl('/icon.svg')
+  const ogImage = resolveOgImage(image)
+  const ogImageAlt = image ? `${SITE_NAME} — ${metaTitle}` : DEFAULT_OG_IMAGE_ALT
 
   let metadataBase: URL
   try {
@@ -83,6 +97,9 @@ export function buildPageMetadata({
     alternates: {
       canonical,
     },
+    authors: [{ name: SITE_NAME, url: absoluteUrl('/') }],
+    creator: SITE_NAME,
+    publisher: SITE_NAME,
     robots: noIndex
       ? { index: false, follow: false }
       : {
@@ -102,17 +119,39 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       title: metaTitle,
       description: metaDescription,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: SITE_NAME }],
+      images: [
+        {
+          url: ogImage,
+          secureUrl: ogImage,
+          width: DEFAULT_OG_IMAGE_WIDTH,
+          height: DEFAULT_OG_IMAGE_HEIGHT,
+          alt: ogImageAlt,
+          type: 'image/png',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: metaTitle,
       description: metaDescription,
-      images: [ogImage],
+      images: {
+        url: ogImage,
+        alt: ogImageAlt,
+      },
     },
     other: {
       'geo.region': 'NG',
       'geo.placename': 'Nigeria',
+      // Explicit OG tags for WhatsApp, Facebook, LinkedIn crawlers
+      'og:image': ogImage,
+      'og:image:secure_url': ogImage,
+      'og:image:url': ogImage,
+      'og:image:width': String(DEFAULT_OG_IMAGE_WIDTH),
+      'og:image:height': String(DEFAULT_OG_IMAGE_HEIGHT),
+      'og:image:alt': ogImageAlt,
+      'og:image:type': 'image/png',
+      'og:site_name': SITE_NAME,
+      'og:locale': 'en_NG',
     },
   }
 }

@@ -17,12 +17,12 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSeoSettings()
   return buildPageMetadata({
-    title: titleWithBrand('Fizam — Official Site | Table Water Nigeria'),
+    title: 'Fizam — Official fizam.ng | Fizam Table Water Nigeria',
     description:
-      'Welcome to Fizam (fizam.ng) — the official Fizam Table Water website. NAFDAC-certified sachet, bottle & dispenser water. Order online for delivery across Nigeria.',
+      'Fizam (fizam.ng) is the official Fizam Table Water website by Alfurat Nigeria Limited. Order NAFDAC-certified sachet, 50cl & 75cl bottled water online — delivery across FCT and Nigeria.',
     path: '/',
-    keywords: ['Fizam', 'fizam.ng', 'Fizam Table Water', ...settings.defaultKeywords],
-    image: settings.logoUrl,
+    keywords: ['Fizam', 'fizam', 'fizam.ng', 'Fizam official', 'Fizam Table Water', ...settings.defaultKeywords],
+    image: settings.logoUrl || '/images/og-image.png',
   })
 }
 
