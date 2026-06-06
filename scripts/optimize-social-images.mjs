@@ -1,6 +1,6 @@
 /**
  * Generates WhatsApp/social-friendly assets:
- * - og-image.jpg 1200×630, < 600 KB
+ * - og-image.jpg 1200×630, < 600 KB, full artwork (no crop) + CTA bar
  * - favicon + apple-touch-icon sizes
  */
 import fs from 'fs'
@@ -13,17 +13,53 @@ const appDir = path.join(root, 'src', 'app')
 const sourceOg = path.join(imagesDir, 'og-image.png')
 const sourceLogo = path.join(imagesDir, 'logo.png')
 
+const OG_WIDTH = 1200
+const OG_HEIGHT = 630
+const CTA_HEIGHT = 72
+const BRAND_BG = { r: 240, g: 247, b: 255 }
+
+function ctaOverlaySvg() {
+  return Buffer.from(`<svg width="${OG_WIDTH}" height="${CTA_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#1a1f71"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+    font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" fill="#ffffff">
+    Order Now at fizam.ng →
+  </text>
+</svg>`)
+}
+
 async function writeOgJpeg() {
   const out = path.join(imagesDir, 'og-image.jpg')
-  let quality = 85
+  const artHeight = OG_HEIGHT - CTA_HEIGHT
+
+  let quality = 88
   for (let attempt = 0; attempt < 6; attempt++) {
-    await sharp(sourceOg)
-      .resize(1200, 630, { fit: 'cover', position: 'centre' })
+    const artwork = await sharp(sourceOg)
+      .resize(OG_WIDTH, artHeight, {
+        fit: 'contain',
+        background: BRAND_BG,
+      })
+      .png()
+      .toBuffer()
+
+    await sharp({
+      create: {
+        width: OG_WIDTH,
+        height: OG_HEIGHT,
+        channels: 3,
+        background: BRAND_BG,
+      },
+    })
+      .composite([
+        { input: artwork, top: 0, left: 0 },
+        { input: ctaOverlaySvg(), top: artHeight, left: 0 },
+      ])
       .jpeg({ quality, mozjpeg: true })
       .toFile(out)
+
     const size = fs.statSync(out).size
     if (size <= 580_000) {
-      console.log(`og-image.jpg: ${size} bytes @ quality ${quality}`)
+      console.log(`og-image.jpg: ${size} bytes @ quality ${quality} (contain + CTA)`)
       return
     }
     quality -= 8

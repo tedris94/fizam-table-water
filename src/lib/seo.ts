@@ -101,6 +101,19 @@ export function buildPageMetadata({
     metadataBase = new URL('https://www.fizam.ng')
   }
 
+  const facebookAppId =
+    process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim() ||
+    process.env.FACEBOOK_APP_ID?.trim() ||
+    ''
+
+  const otherMeta: Record<string, string> = {
+    'geo.region': 'NG',
+    'geo.placename': 'Nigeria',
+  }
+  if (facebookAppId) {
+    otherMeta['fb:app_id'] = facebookAppId
+  }
+
   return {
     title: metaTitle,
     description: metaDescription,
@@ -159,10 +172,7 @@ export function buildPageMetadata({
         alt: ogImageAlt,
       },
     },
-    other: {
-      'geo.region': 'NG',
-      'geo.placename': 'Nigeria',
-    },
+    other: otherMeta,
   }
 }
 

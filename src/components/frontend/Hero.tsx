@@ -158,13 +158,13 @@ export function Hero({
               </a>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-md md:max-w-none">
-            <div className="relative z-10 aspect-square rounded-2xl shadow-2xl overflow-hidden">
+          <div className="relative mx-auto w-full max-w-lg md:max-w-none">
+            <div className="relative z-10 aspect-[3/2] rounded-2xl bg-white shadow-2xl overflow-hidden">
               <Image
                 src={imgSrc}
                 alt="Fizam Table Water Products"
                 fill
-                className="object-cover"
+                className="object-contain object-center"
                 priority
                 sizes="(max-width: 768px) 90vw, (max-width: 1024px) 50vw, 600px"
               />
