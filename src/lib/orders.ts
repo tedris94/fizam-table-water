@@ -1,11 +1,15 @@
 import type { Payload } from 'payload'
-import { sendOrderConfirmation } from '@/lib/email'
+import {
+  notifyCustomerOfOrderStatus,
+  notifyStaffNewOrder,
+  sendOrderConfirmationEmail,
+} from '@/lib/orderEmails'
 
 export async function fulfillPaidOrder(payload: Payload, orderId: string | number) {
   const order = await payload.findByID({
     collection: 'orders',
     id: orderId,
-    depth: 2,
+    depth: 3,
     overrideAccess: true,
   })
 
@@ -14,7 +18,7 @@ export async function fulfillPaidOrder(payload: Payload, orderId: string | numbe
   }
 
   if (order.status === 'paid') {
-    return { alreadyPaid: true as const }
+    return { alreadyPaid: true as const, emailSent: false, emailError: undefined as string | undefined }
   }
 
   for (const row of order.items || []) {
@@ -38,23 +42,26 @@ export async function fulfillPaidOrder(payload: Payload, orderId: string | numbe
     })
   }
 
-  await payload.update({
+  const updated = await payload.update({
     collection: 'orders',
     id: orderId,
     overrideAccess: true,
     data: { status: 'paid' },
+    depth: 3,
   })
 
-  const email = order.shipping?.email
-  if (email) {
-    await sendOrderConfirmation({
-      to: email,
-      customerName: order.shipping?.fullName || order.customerName || 'Customer',
-      orderId,
-      total: order.total,
-      reference: order.paystackReference,
-    }).catch(() => {})
+  let emailSent = false
+  let emailError: string | undefined
+
+  try {
+    await sendOrderConfirmationEmail(updated)
+    await notifyStaffNewOrder(updated)
+    emailSent = true
+    console.info(`[orders] payment emails sent for order ${orderId}`)
+  } catch (err) {
+    emailError = err instanceof Error ? err.message : 'Could not send order emails.'
+    console.error('[orders] payment emails', err)
   }
 
-  return { alreadyPaid: false as const }
+  return { alreadyPaid: false as const, emailSent, emailError }
 }

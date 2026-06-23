@@ -97,13 +97,16 @@ export async function GET(request: Request) {
       ok: true,
       configured: true,
       verified: true,
-      message: 'SMTP connection succeeded. Append ?send=1 to send a real test email.',
+      message: 'SMTP connection succeeded. Append ?send=1 to send a real test email. Use ?to=you@gmail.com to test external delivery.',
       config,
     })
   }
 
+  const recipientParam = url.searchParams.get('to')?.trim()
   const recipient =
-    process.env.CONTACT_NOTIFY_EMAIL?.split(/[,;]/)[0]?.trim() || process.env.SMTP_USER?.trim()
+    recipientParam ||
+    process.env.CONTACT_NOTIFY_EMAIL?.split(/[,;]/)[0]?.trim() ||
+    process.env.SMTP_USER?.trim()
   if (!recipient) {
     return NextResponse.json(
       { ok: false, message: 'No recipient available (set CONTACT_NOTIFY_EMAIL or SMTP_USER).' },
@@ -123,9 +126,10 @@ export async function GET(request: Request) {
       verified: true,
       sent: !result.skipped,
       recipient,
+      messageId: result.messageId ?? null,
       message: result.skipped
         ? 'Mailer reported as not configured at send time.'
-        : `Test email queued for ${recipient}.`,
+        : `Test email accepted by ${process.env.SMTP_HOST} for ${recipient}. Check inbox and spam.`,
       config,
     })
   } catch (e) {

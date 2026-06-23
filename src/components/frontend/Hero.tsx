@@ -4,6 +4,7 @@ import { Phone, ShoppingCart, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import Image from 'next/image'
 import { Logo } from '@/components/frontend/Logo'
+import { SiteSearch } from '@/components/frontend/SiteSearch'
 import { useAuth } from '@/contexts/AuthContext'
 
 const DEFAULT_HERO_IMAGE = '/images/hero.png'
@@ -135,6 +136,12 @@ export function Hero({
           </div>
         )}
       </nav>
+
+      <div className="relative z-10 container mx-auto px-4 pb-4">
+        <div className="mx-auto max-w-xl">
+          <SiteSearch placeholder="Search products and pages…" />
+        </div>
+      </div>
 
       <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <div className="grid md:grid-cols-2 gap-12 items-center">

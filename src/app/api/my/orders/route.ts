@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 import { getPayloadSingleton } from '@/lib/payload'
-import type { User } from '@/payload-types'
 
 /** Orders placed by the logged-in customer (matches shipping.email). */
 export async function GET(request: Request) {
-  const payload = await getPayloadSingleton()
-  const { user } = await payload.auth({ headers: request.headers })
+  const user = await getCurrentUser(request)
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const email = (user as User).email
-
+  const payload = await getPayloadSingleton()
+  const email = user.email
   const orders = await payload.find({
     collection: 'orders',
     overrideAccess: true,

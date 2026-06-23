@@ -2,15 +2,13 @@ import { Droplets } from 'lucide-react'
 import Image from 'next/image'
 import { productSlug } from '@/lib/productSlug'
 
-const POUR_IMAGE = '/images/product-side.png'
 const DISPENSER_IMAGE = '/images/dispenser.png'
-const BOTTLE_PACK_IMAGE = '/images/bottle-pack.jpg'
 
 const PRODUCT_CARDS = [
   {
-    name: 'Sachet Water',
-    size: '30cl',
-    description: 'Perfect for quick refreshment on the go',
+    name: 'Table Water',
+    size: '35cl',
+    description: 'Compact bottle for everyday hydration',
     icon: '💧',
   },
   {
@@ -26,8 +24,14 @@ const PRODUCT_CARDS = [
     icon: '💦',
   },
   {
-    name: 'Dispenser Bottle',
-    size: '18.9L',
+    name: 'Sachet Water',
+    size: '50cl',
+    description: 'Perfect for quick refreshment on the go',
+    icon: '💧',
+  },
+  {
+    name: 'Dispenser',
+    size: '19L',
     description: 'Perfect for office and home dispensers',
     icon: '🏢',
   },
@@ -76,12 +80,9 @@ export function Products() {
               <div className="absolute inset-0 bg-gradient-to-br from-[#2563eb] to-[#0ea5e9] rounded-3xl transform rotate-3" />
 
               {/* Collage: dispenser hero + pour shot + bottle pack */}
-              <div className="relative aspect-square grid grid-cols-5 grid-rows-2 gap-3 rounded-3xl bg-white p-3 shadow-2xl overflow-hidden">
-                {/* Hero: dispenser bottle (tall left column, full height) */}
-                <div className="relative col-span-3 row-span-2 overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_50%_28%,#1e3a8a_0%,#0c1e5e_55%,#050b2e_100%)]">
-                  {/* Soft top highlight so the bottle reads as lit from above */}
+              <div className="relative aspect-[4/5] rounded-3xl bg-white p-3 shadow-2xl overflow-hidden">
+                <div className="relative h-full overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_50%_28%,#1e3a8a_0%,#0c1e5e_55%,#050b2e_100%)]">
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_18%,rgba(186,230,253,0.22)_0%,transparent_55%)]" />
-                  {/* Subtle vignette for depth */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.35)_100%)]" />
                   <Image
                     src={DISPENSER_IMAGE}
@@ -93,35 +94,7 @@ export function Products() {
                   />
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent p-3">
                     <span className="text-xs font-medium uppercase tracking-wider text-white">
-                      18.9L Dispenser
-                    </span>
-                  </div>
-                </div>
-
-                {/* Top-right: pour shot */}
-                <div className="relative col-span-2 row-span-1 rounded-2xl overflow-hidden ring-1 ring-blue-100">
-                  <Image
-                    src={POUR_IMAGE}
-                    alt="Pure Fizam water poured into a glass"
-                    fill
-                    sizes="(max-width: 768px) 35vw, (max-width: 1024px) 25vw, 200px"
-                    className="object-cover"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1a1f71]/30 to-transparent" />
-                </div>
-
-                {/* Bottom-right: shrink-wrapped bottle pack */}
-                <div className="relative col-span-2 row-span-1 rounded-2xl overflow-hidden ring-1 ring-blue-100">
-                  <Image
-                    src={BOTTLE_PACK_IMAGE}
-                    alt="Pack of Fizam Table Water bottles"
-                    fill
-                    sizes="(max-width: 768px) 35vw, (max-width: 1024px) 25vw, 200px"
-                    className="object-cover"
-                  />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1a1f71]/40 to-transparent p-2">
-                    <span className="text-xs font-medium uppercase tracking-wider text-white/90">
-                      Bottle Pack
+                      19L Dispenser
                     </span>
                   </div>
                 </div>

@@ -1,16 +1,26 @@
-import { headers } from 'next/headers'
+import config from '@payload-config'
+import { createPayloadRequest } from 'payload'
 import type { User } from '@/payload-types'
-import { getPayloadSingleton } from '@/lib/payload'
 
 export { PAYLOAD_TOKEN_COOKIE } from '@/constants/payload'
 
-export async function getCurrentUser(): Promise<User | null> {
+export function isAdminRole(role: string | undefined): role is 'super_admin' | 'admin' {
+  return role === 'super_admin' || role === 'admin'
+}
+
+/** Authenticate the incoming request using Payload's REST auth pipeline. */
+export async function getCurrentUser(request: Request): Promise<User | null> {
   try {
-    const payload = await getPayloadSingleton()
-    const headersList = await headers()
-    const auth = await payload.auth({ headers: headersList })
-    return (auth.user as User | null) ?? null
-  } catch {
+    const req = await createPayloadRequest({
+      config,
+      request,
+      canSetHeaders: false,
+    })
+    return (req.user as User | null) ?? null
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[getCurrentUser]', error)
+    }
     return null
   }
 }

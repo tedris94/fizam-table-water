@@ -1,23 +1,15 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
-import { ForbiddenPanel } from '@/components/dashboard/ForbiddenPanel'
 import { ShippingZonesView } from '@/components/dashboard/ShippingZonesView'
+import { DashboardPageGuard } from '@/components/dashboard/DashboardPageGuard'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ShippingZonesPage() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-lg text-[#1a1f71]">
-        Loading delivery locations…
-      </div>
-    )
-  }
-
-  if (!user || !['super_admin', 'admin'].includes(user.role)) {
-    return <ForbiddenPanel />
-  }
-
-  return <ShippingZonesView role={user.role} />
+  return (
+    <DashboardPageGuard capability="shipping.view">
+      <ShippingZonesView role={user?.role ?? 'user'} />
+    </DashboardPageGuard>
+  )
 }

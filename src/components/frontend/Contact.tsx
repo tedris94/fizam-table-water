@@ -2,6 +2,8 @@
 
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { useState } from 'react';
+import { ObfuscatedEmail } from '@/components/frontend/ObfuscatedEmail';
+import { ENCODED_EMAILS } from '@/lib/obfuscateEmail';
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -87,9 +89,10 @@ export function Contact() {
                   </div>
                   <div>
                     <div className="text-gray-600 text-sm mb-1">Email</div>
-                    <a href="mailto:info@fizam.ng" className="text-lg text-[#1a1f71] hover:text-[#2563eb]">
-                      info@fizam.ng
-                    </a>
+                    <ObfuscatedEmail
+                      encoded={ENCODED_EMAILS.infoFizamNg}
+                      className="text-lg text-[#1a1f71] hover:text-[#2563eb]"
+                    />
                   </div>
                 </div>
 

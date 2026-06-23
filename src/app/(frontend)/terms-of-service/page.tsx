@@ -41,9 +41,9 @@ export default function TermsOfServicePage() {
                 Fizam Table Water offers the following products and services:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Sachet water (30cl bags)</li>
-                <li>Table water bottles (50cl, 75cl)</li>
-                <li>Dispensible water bottles (various sizes)</li>
+                <li>Sachet water (50cl bags)</li>
+                <li>Table water bottles (35cl, 50cl, 75cl)</li>
+                <li>Dispenser water (19 litres)</li>
                 <li>Retail, wholesale, and home delivery services</li>
                 <li>Direct factory sales</li>
               </ul>

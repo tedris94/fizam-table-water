@@ -10,12 +10,17 @@ import { migrations } from './migrations'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Products } from './collections/Products'
+import { ProductCategories } from './collections/ProductCategories'
+import { ProductSizes } from './collections/ProductSizes'
+import { ProductTags } from './collections/ProductTags'
 import { Orders } from './collections/Orders'
 import { TeamMembers } from './collections/TeamMembers'
 import { Jobs } from './collections/Jobs'
 import { Applications } from './collections/Applications'
 import { Pages } from './collections/Pages'
 import { ShippingZones } from './collections/ShippingZones'
+import { EmailTemplates } from './collections/EmailTemplates'
+import { DashboardRoles } from './collections/DashboardRoles'
 import { SiteSettings } from './globals/SiteSettings'
 import { HomePage } from './globals/HomePage'
 
@@ -68,12 +73,23 @@ const sqliteUrl =
     ? envDatabaseUri
     : `file:${runtimeDatabaseFile.replace(/\\/g, '/')}`
 
+const serverURL =
+  process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.PAYLOAD_PUBLIC_SERVER_URL ||
+      'https://fizam.ng'
+    : process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+/** Local dev origins — Payload CSRF only trusts `serverURL` by default. */
+const localDevCsrfOrigins =
+  process.env.NODE_ENV !== 'production'
+    ? ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001']
+    : []
+
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'CHANGE_ME_DEV_ONLY',
-  serverURL:
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.PAYLOAD_PUBLIC_SERVER_URL ||
-    'http://localhost:3000',
+  serverURL,
+  csrf: localDevCsrfOrigins,
   admin: {
     user: Users.slug,
     meta: {
@@ -83,7 +99,22 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Products, Orders, TeamMembers, Jobs, Applications, Pages, ShippingZones],
+  collections: [
+    Users,
+    Media,
+    ProductCategories,
+    ProductSizes,
+    ProductTags,
+    Products,
+    Orders,
+    TeamMembers,
+    Jobs,
+    Applications,
+    Pages,
+    ShippingZones,
+    EmailTemplates,
+    DashboardRoles,
+  ],
   globals: [SiteSettings, HomePage],
   editor: lexicalEditor({}),
   typescript: {

@@ -1,5 +1,7 @@
 import { Award, CheckCircle, Shield, Droplet } from 'lucide-react'
 import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
+import { ObfuscatedEmail } from '@/components/frontend/ObfuscatedEmail'
+import { ENCODED_EMAILS } from '@/lib/obfuscateEmail'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { Footer } from '@/components/frontend/Footer'
 import { BackToTop } from '@/components/frontend/BackToTop'
@@ -214,9 +216,10 @@ export default function QualityCertificationsPage() {
               For verification of our certifications or quality reports, please contact us:
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <a href="mailto:info@fizamwater.com" className="text-[#2563eb] hover:underline">
-                info@fizamwater.com
-              </a>
+              <ObfuscatedEmail
+                encoded={ENCODED_EMAILS.infoFizamWater}
+                className="text-[#2563eb] hover:underline"
+              />
               <span className="text-gray-400">|</span>
               <a href="tel:+2349166698406" className="text-[#2563eb] hover:underline">
                 09166698406

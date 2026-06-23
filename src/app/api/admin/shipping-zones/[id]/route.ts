@@ -50,7 +50,7 @@ function parseId(raw: string): number | string {
 type RouteContext = { params: Promise<{ id: string }> }
 
 export async function PUT(request: Request, { params }: RouteContext) {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser(request)
   if (!isAdmin(user?.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -72,8 +72,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
-  const user = await getCurrentUser()
+export async function DELETE(request: Request, { params }: RouteContext) {
+  const user = await getCurrentUser(request)
   if (!isAdmin(user?.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

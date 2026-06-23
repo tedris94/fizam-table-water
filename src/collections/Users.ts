@@ -21,16 +21,13 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'role',
-      type: 'select',
+      type: 'text',
       required: true,
       defaultValue: 'user',
-      options: [
-        { label: 'Super Admin', value: 'super_admin' },
-        { label: 'Admin', value: 'admin' },
-        { label: 'HR', value: 'hr' },
-        { label: 'User', value: 'user' },
-        { label: 'Customer', value: 'customer' },
-      ],
+      admin: {
+        description:
+          'Dashboard role slug (must match a role in Dashboard → Roles, e.g. admin, hr, warehouse).',
+      },
       access: {
         update: (({ req }) =>
           (req.user as { role?: string } | undefined)?.role === 'super_admin') as FieldAccess,

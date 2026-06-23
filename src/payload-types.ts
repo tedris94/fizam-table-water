@@ -69,6 +69,9 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    'product-categories': ProductCategory;
+    'product-sizes': ProductSize;
+    'product-tags': ProductTag;
     products: Product;
     orders: Order;
     'team-members': TeamMember;
@@ -76,6 +79,8 @@ export interface Config {
     applications: Application;
     pages: Page;
     'shipping-zones': ShippingZone;
+    'email-templates': EmailTemplate;
+    'dashboard-roles': DashboardRole;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -85,6 +90,9 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'product-categories': ProductCategoriesSelect<false> | ProductCategoriesSelect<true>;
+    'product-sizes': ProductSizesSelect<false> | ProductSizesSelect<true>;
+    'product-tags': ProductTagsSelect<false> | ProductTagsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>;
@@ -92,6 +100,8 @@ export interface Config {
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     'shipping-zones': ShippingZonesSelect<false> | ShippingZonesSelect<true>;
+    'email-templates': EmailTemplatesSelect<false> | EmailTemplatesSelect<true>;
+    'dashboard-roles': DashboardRolesSelect<false> | DashboardRolesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -144,7 +154,10 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   fullName: string;
-  role: 'super_admin' | 'admin' | 'hr' | 'user' | 'customer';
+  /**
+   * Dashboard role slug (must match a role in Dashboard → Roles, e.g. admin, hr, warehouse).
+   */
+  role: string;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -185,16 +198,66 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-categories".
+ */
+export interface ProductCategory {
+  id: number;
+  slug: string;
+  label: string;
+  sortOrder?: number | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-sizes".
+ */
+export interface ProductSize {
+  id: number;
+  label: string;
+  /**
+   * Category slug this size belongs to (e.g. table_water).
+   */
+  categorySlug: string;
+  sortOrder?: number | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-tags".
+ */
+export interface ProductTag {
+  id: number;
+  slug: string;
+  label: string;
+  sortOrder?: number | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
  */
 export interface Product {
   id: number;
+  /**
+   * Category slug (managed in Dashboard → Products → Categories).
+   */
+  category: string;
   name: string;
   size: string;
   price: number;
   description?: string | null;
   image?: (number | null) | Media;
   stock: number;
+  /**
+   * Optional product tags for search and filtering.
+   */
+  tags?: (number | ProductTag)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -369,12 +432,56 @@ export interface Application {
   fullName: string;
   email: string;
   phone: string;
+  /**
+   * Applicant reference (e.g. FZ-APP-2026-00042). Shown in confirmation emails.
+   */
+  applicationRef?: string | null;
   address?: string | null;
+  educationHistory?:
+    | {
+        qualification: string;
+        institution: string;
+        fieldOfStudy?: string | null;
+        startYear?: string | null;
+        endYear?: string | null;
+        grade?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  workHistory?:
+    | {
+        jobTitle: string;
+        company: string;
+        location?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        current?: boolean | null;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * CV professional summary
+   */
+  professionalSummary?: string | null;
+  /**
+   * Why the applicant wants this role
+   */
+  motivationStatement?: string | null;
+  /**
+   * Formatted education summary (auto-generated on apply)
+   */
   education?: string | null;
+  /**
+   * Formatted experience summary
+   */
   experience?: string | null;
+  /**
+   * Formatted cover letter summary
+   */
   coverLetter?: string | null;
   resume?: (number | null) | Media;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'shortlisted' | 'approved' | 'rejected';
   updatedAt: string;
   createdAt: string;
 }
@@ -411,6 +518,101 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates".
+ */
+export interface EmailTemplate {
+  id: number;
+  slug:
+    | 'careers-application-received'
+    | 'careers-application-shortlisted'
+    | 'careers-application-approved'
+    | 'careers-application-rejected'
+    | 'careers-hr-new-application'
+    | 'contact-lead-notification'
+    | 'order-confirmation'
+    | 'order-processing'
+    | 'order-delivered'
+    | 'order-cancelled'
+    | 'order-staff-new-order';
+  name: string;
+  /**
+   * Shown in the dashboard to explain when this email is sent.
+   */
+  description?: string | null;
+  category: 'careers' | 'orders' | 'contact' | 'internal';
+  layout: 'careers' | 'branded' | 'plain';
+  /**
+   * Use placeholders like {{jobTitle}} — see Variables help.
+   */
+  subject: string;
+  /**
+   * Plain-text version of the email.
+   */
+  textBody: string;
+  /**
+   * HTML body (inner content only; layout wrapper is applied automatically).
+   */
+  htmlBody: string;
+  /**
+   * Available placeholders for this template.
+   */
+  variablesHelp?: string | null;
+  /**
+   * When disabled, this email will not be sent.
+   */
+  enabled?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dashboard-roles".
+ */
+export interface DashboardRole {
+  id: number;
+  /**
+   * Matches user.role (e.g. admin, hr).
+   */
+  slug: string;
+  name: string;
+  description?: string | null;
+  capabilities?:
+    | {
+        key:
+          | 'dashboard.home'
+          | 'analytics.view'
+          | 'products.catalog'
+          | 'products.categories'
+          | 'products.sizes'
+          | 'products.tags'
+          | 'products.delete'
+          | 'orders.view'
+          | 'shipping.view'
+          | 'team.view'
+          | 'team.delete'
+          | 'careers.manage'
+          | 'applications.manage'
+          | 'applications.delete'
+          | 'organogram.view'
+          | 'cms.view'
+          | 'settings.view'
+          | 'email.templates'
+          | 'email.templates.all'
+          | 'diagnostics.view'
+          | 'users.manage'
+          | 'roles.manage';
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * System roles cannot be deleted from the dashboard.
+   */
+  isSystem?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -442,6 +644,18 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'product-categories';
+        value: number | ProductCategory;
+      } | null)
+    | ({
+        relationTo: 'product-sizes';
+        value: number | ProductSize;
+      } | null)
+    | ({
+        relationTo: 'product-tags';
+        value: number | ProductTag;
+      } | null)
+    | ({
         relationTo: 'products';
         value: number | Product;
       } | null)
@@ -468,6 +682,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'shipping-zones';
         value: number | ShippingZone;
+      } | null)
+    | ({
+        relationTo: 'email-templates';
+        value: number | EmailTemplate;
+      } | null)
+    | ({
+        relationTo: 'dashboard-roles';
+        value: number | DashboardRole;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -555,15 +777,53 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-categories_select".
+ */
+export interface ProductCategoriesSelect<T extends boolean = true> {
+  slug?: T;
+  label?: T;
+  sortOrder?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-sizes_select".
+ */
+export interface ProductSizesSelect<T extends boolean = true> {
+  label?: T;
+  categorySlug?: T;
+  sortOrder?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-tags_select".
+ */
+export interface ProductTagsSelect<T extends boolean = true> {
+  slug?: T;
+  label?: T;
+  sortOrder?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
+  category?: T;
   name?: T;
   size?: T;
   price?: T;
   description?: T;
   image?: T;
   stock?: T;
+  tags?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -653,7 +913,33 @@ export interface ApplicationsSelect<T extends boolean = true> {
   fullName?: T;
   email?: T;
   phone?: T;
+  applicationRef?: T;
   address?: T;
+  educationHistory?:
+    | T
+    | {
+        qualification?: T;
+        institution?: T;
+        fieldOfStudy?: T;
+        startYear?: T;
+        endYear?: T;
+        grade?: T;
+        id?: T;
+      };
+  workHistory?:
+    | T
+    | {
+        jobTitle?: T;
+        company?: T;
+        location?: T;
+        startDate?: T;
+        endDate?: T;
+        current?: T;
+        description?: T;
+        id?: T;
+      };
+  professionalSummary?: T;
+  motivationStatement?: T;
   education?: T;
   experience?: T;
   coverLetter?: T;
@@ -703,6 +989,42 @@ export interface ShippingZonesSelect<T extends boolean = true> {
         value?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates_select".
+ */
+export interface EmailTemplatesSelect<T extends boolean = true> {
+  slug?: T;
+  name?: T;
+  description?: T;
+  category?: T;
+  layout?: T;
+  subject?: T;
+  textBody?: T;
+  htmlBody?: T;
+  variablesHelp?: T;
+  enabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dashboard-roles_select".
+ */
+export interface DashboardRolesSelect<T extends boolean = true> {
+  slug?: T;
+  name?: T;
+  description?: T;
+  capabilities?:
+    | T
+    | {
+        key?: T;
+        id?: T;
+      };
+  isSystem?: T;
   updatedAt?: T;
   createdAt?: T;
 }

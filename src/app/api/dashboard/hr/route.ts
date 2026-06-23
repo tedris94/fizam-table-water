@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 import { getPayloadSingleton } from '@/lib/payload'
-import type { User } from '@/payload-types'
 
 export async function GET(request: Request) {
-  const payload = await getPayloadSingleton()
-  const { user } = await payload.auth({ headers: request.headers })
+  const user = await getCurrentUser(request)
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const role = (user as User).role
-  if (!['super_admin', 'admin', 'hr'].includes(role)) {
+  if (!['super_admin', 'admin', 'hr'].includes(user.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  const payload = await getPayloadSingleton()
   const team = await payload.find({ collection: 'team-members', limit: 10000 })
   const jobs = await payload.find({ collection: 'jobs', limit: 10000 })
   const applications = await payload.find({

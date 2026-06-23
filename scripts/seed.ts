@@ -10,6 +10,9 @@ const root = path.resolve(__dirname, '..')
 
 process.chdir(root)
 
+// Skip interactive dev schema push during seed (schema should come from migrations).
+process.env.PAYLOAD_MIGRATING = 'true'
+
 const dataDir = path.join(root, 'data')
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true })
@@ -59,45 +62,149 @@ async function seed() {
     }
   }
 
+  const taxonomySeed = [
+    { slug: 'table_water', label: 'Table Water', sortOrder: 10, sizes: ['35cl', '50cl', '75cl'] },
+    { slug: 'sachet_water', label: 'Sachet Water', sortOrder: 20, sizes: ['50cl'] },
+    { slug: 'dispenser', label: 'Dispenser', sortOrder: 30, sizes: ['19L'] },
+  ]
+
+  for (const cat of taxonomySeed) {
+    const existingCat = await payload.find({
+      collection: 'product-categories',
+      where: { slug: { equals: cat.slug } },
+      limit: 1,
+    })
+    if (existingCat.totalDocs === 0) {
+      await payload.create({
+        collection: 'product-categories',
+        data: {
+          slug: cat.slug,
+          label: cat.label,
+          sortOrder: cat.sortOrder,
+          isActive: true,
+        },
+      })
+      console.log('Created category:', cat.label)
+    }
+    for (const [index, size] of cat.sizes.entries()) {
+      const existingSize = await payload.find({
+        collection: 'product-sizes',
+        where: {
+          and: [
+            { categorySlug: { equals: cat.slug } },
+            { label: { equals: size } },
+          ],
+        },
+        limit: 1,
+      })
+      if (existingSize.totalDocs === 0) {
+        await payload.create({
+          collection: 'product-sizes',
+          data: {
+            label: size,
+            categorySlug: cat.slug,
+            sortOrder: cat.sortOrder + index,
+            isActive: true,
+          },
+        })
+        console.log('Created size:', cat.label, size)
+      }
+    }
+  }
+
   const products = await payload.find({ collection: 'products', limit: 1 })
+  const catalog = [
+    {
+      category: 'table_water' as const,
+      name: 'Table Water',
+      size: '35cl',
+      price: 35,
+      description: 'Compact bottle for everyday hydration',
+      stock: 5000,
+    },
+    {
+      category: 'table_water' as const,
+      name: 'Table Water',
+      size: '50cl',
+      price: 50,
+      description: 'Ideal for personal daily hydration',
+      stock: 5000,
+    },
+    {
+      category: 'table_water' as const,
+      name: 'Table Water',
+      size: '75cl',
+      price: 100,
+      description: 'Great for sharing and family use',
+      stock: 3000,
+    },
+    {
+      category: 'sachet_water' as const,
+      name: 'Sachet Water',
+      size: '50cl',
+      price: 30,
+      description: 'Perfect for quick refreshment on the go',
+      stock: 10000,
+    },
+    {
+      category: 'dispenser' as const,
+      name: 'Dispenser',
+      size: '19L',
+      price: 500,
+      description: 'Perfect for office and home dispensers',
+      stock: 1000,
+    },
+  ]
+
   if (products.totalDocs === 0) {
-    const defaults = [
-      {
-        name: 'Sachet Water',
-        size: '30cl',
-        price: 20,
-        description: 'Perfect for quick refreshment on the go',
-        stock: 10000,
-      },
-      {
-        name: 'Table Water',
-        size: '50cl',
-        price: 50,
-        description: 'Ideal for personal daily hydration',
-        stock: 5000,
-      },
-      {
-        name: 'Table Water',
-        size: '75cl',
-        price: 100,
-        description: 'Great for sharing and family use',
-        stock: 3000,
-      },
-      {
-        name: 'Dispenser Bottle',
-        size: '18.9L',
-        price: 500,
-        description: 'Perfect for office and home dispensers',
-        stock: 1000,
-      },
-    ]
-    for (const p of defaults) {
+    for (const p of catalog) {
       await payload.create({
         collection: 'products',
         data: p,
       })
     }
     console.log('Seeded products.')
+  } else {
+    for (const p of catalog) {
+      const existing = await payload.find({
+        collection: 'products',
+        where: {
+          and: [
+            { category: { equals: p.category } },
+            { size: { equals: p.size } },
+          ],
+        },
+        limit: 1,
+      })
+      if (existing.totalDocs === 0) {
+        await payload.create({ collection: 'products', data: p })
+        console.log('Added product:', p.name, p.size)
+      } else {
+        await payload.update({
+          collection: 'products',
+          id: existing.docs[0].id,
+          data: {
+            name: p.name,
+            description: p.description,
+          },
+        })
+      }
+    }
+
+    const obsolete = await payload.find({
+      collection: 'products',
+      where: {
+        or: [
+          { size: { equals: '30cl' } },
+          { size: { equals: '18.9L' } },
+        ],
+      },
+      limit: 50,
+    })
+    for (const doc of obsolete.docs) {
+      await payload.delete({ collection: 'products', id: doc.id })
+      console.log('Removed obsolete product:', doc.name, doc.size)
+    }
   }
 
   const team = await payload.find({ collection: 'team-members', limit: 1 })

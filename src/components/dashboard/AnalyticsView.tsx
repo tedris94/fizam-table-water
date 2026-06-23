@@ -54,10 +54,11 @@ export function AnalyticsView({ role }: AnalyticsViewProps) {
 
   // Product distribution data
   const productData = [
-    { name: 'Sachet Water (30cl)', value: 45, color: '#2563eb' },
-    { name: 'Table Water (50cl)', value: 30, color: '#0ea5e9' },
-    { name: 'Table Water (75cl)', value: 18, color: '#06b6d4' },
-    { name: 'Dispenser (18.9L)', value: 7, color: '#1a1f71' },
+    { name: 'Sachet Water (50cl)', value: 40, color: '#2563eb' },
+    { name: 'Table Water (35cl)', value: 15, color: '#38bdf8' },
+    { name: 'Table Water (50cl)', value: 25, color: '#0ea5e9' },
+    { name: 'Table Water (75cl)', value: 13, color: '#06b6d4' },
+    { name: 'Dispenser (19L)', value: 7, color: '#1a1f71' },
   ];
 
   // Monthly performance data

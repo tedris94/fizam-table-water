@@ -17,6 +17,11 @@ function LoginInner() {
 
   // If a Payload session cookie is already valid, jump straight to the dashboard.
   useEffect(() => {
+    if (searchParams.get('signedOut') === '1') {
+      setCheckingSession(false)
+      return
+    }
+
     let cancelled = false
     fetch('/api/users/me', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
@@ -93,6 +98,12 @@ function LoginInner() {
             <h1 className="text-2xl text-[#1a1f71] mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to access your dashboard</p>
           </div>
+
+          {searchParams.get('signedOut') === '1' && (
+            <div className="mb-6 rounded-xl border-2 border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              You have been signed out successfully.
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">

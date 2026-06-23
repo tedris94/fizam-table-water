@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ShoppingCart,
   Plus,
@@ -11,12 +12,15 @@ import {
   Store,
   CreditCard,
   CheckCircle,
+  Search,
+  X,
 } from 'lucide-react'
 import type { Product } from '@/payload-types'
 import { productSlug } from '@/lib/productSlug'
 import { PICKUP_ORDER_ADDRESS } from '@/lib/deliveryMode'
 import { NIGERIAN_STATES, postcodeForState } from '@/lib/nigeria'
 import { getLgasForState } from '@/lib/nigeria-lgas'
+import type { ProductTaxonomy } from '@/lib/productTaxonomy'
 
 type CartItem = {
   id: number
@@ -35,8 +39,30 @@ type DeliveryMode = 'delivery' | 'pickup'
 const DEFAULT_FEE = 1500
 const DEFAULT_ZONE = 'Standard'
 
+function productTagIds(product: Product): (number | string)[] {
+  if (!product.tags?.length) return []
+  return product.tags.map((tag) => (typeof tag === 'object' && tag ? tag.id : tag))
+}
+
 export function OrderCheckout() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialQuery = searchParams.get('q')?.trim() ?? ''
+  const initialCategory = searchParams.get('category')?.trim() || 'all'
+  const initialSize = searchParams.get('size')?.trim() || 'all'
+  const initialTag = searchParams.get('tag')?.trim() || 'all'
+
   const [products, setProducts] = useState<Product[]>([])
+  const [productQuery, setProductQuery] = useState(initialQuery)
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
+  const [sizeFilter, setSizeFilter] = useState(initialSize)
+  const [tagFilter, setTagFilter] = useState(initialTag)
+  const [taxonomy, setTaxonomy] = useState<ProductTaxonomy>({
+    categories: [],
+    sizes: [],
+    tags: [],
+  })
+  const [categoryLabels, setCategoryLabels] = useState<Record<string, string>>({})
   const [cart, setCart] = useState<CartItem[]>([])
   const [step, setStep] = useState<Step>('cart')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('delivery')
@@ -58,12 +84,144 @@ export function OrderCheckout() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/products?limit=200&depth=0')
+    fetch('/api/products?limit=200&depth=1')
       .then((r) => r.json())
       .then((data: { docs?: Product[] }) => setProducts(data.docs ?? []))
       .catch(() => setProducts([]))
       .finally(() => setLoadingProducts(false))
+
+    void fetch('/api/product-taxonomy')
+      .then((r) => r.json())
+      .then((data: ProductTaxonomy) => {
+        setTaxonomy({
+          categories: data.categories ?? [],
+          sizes: data.sizes ?? [],
+          tags: data.tags ?? [],
+        })
+        const map: Record<string, string> = {}
+        for (const cat of data.categories ?? []) map[cat.slug] = cat.label
+        setCategoryLabels(map)
+      })
+      .catch(() => undefined)
   }, [])
+
+  useEffect(() => {
+    setProductQuery(initialQuery)
+    setCategoryFilter(initialCategory)
+    setSizeFilter(initialSize)
+    setTagFilter(initialTag)
+  }, [initialQuery, initialCategory, initialSize, initialTag])
+
+  const sizeOptions = useMemo(() => {
+    const sizes =
+      categoryFilter === 'all'
+        ? taxonomy.sizes
+        : taxonomy.sizes.filter((s) => s.categorySlug === categoryFilter)
+    return ['all', ...Array.from(new Set(sizes.map((s) => s.label)))]
+  }, [taxonomy.sizes, categoryFilter])
+
+  const activeTagOptions = useMemo(() => taxonomy.tags, [taxonomy.tags])
+
+  const filteredProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase()
+    return products.filter((product) => {
+      if (categoryFilter !== 'all' && product.category !== categoryFilter) return false
+      if (sizeFilter !== 'all' && product.size !== sizeFilter) return false
+      if (tagFilter !== 'all') {
+        const ids = productTagIds(product).map(String)
+        const tag = taxonomy.tags.find((t) => t.slug === tagFilter || String(t.id) === tagFilter)
+        if (!tag || !ids.includes(String(tag.id))) return false
+      }
+      if (!q) return true
+      const categoryLabel = categoryLabels[product.category ?? ''] ?? product.category ?? ''
+      const tagLabels = productTagIds(product)
+        .map((id) => taxonomy.tags.find((t) => String(t.id) === String(id))?.label)
+        .filter(Boolean)
+      const haystack = [
+        product.name,
+        product.size,
+        product.description,
+        product.category,
+        categoryLabel,
+        ...tagLabels,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [products, productQuery, categoryLabels, categoryFilter, sizeFilter, tagFilter, taxonomy.tags])
+
+  const groupedProducts = useMemo(() => {
+    const groups = taxonomy.categories.length
+      ? taxonomy.categories.map((cat) => ({
+          slug: cat.slug,
+          label: cat.label,
+          items: filteredProducts.filter((p) => p.category === cat.slug),
+        }))
+      : Object.entries(
+          filteredProducts.reduce<Record<string, Product[]>>((acc, product) => {
+            const slug = product.category ?? 'other'
+            if (!acc[slug]) acc[slug] = []
+            acc[slug].push(product)
+            return acc
+          }, {}),
+        ).map(([slug, items]) => ({
+          slug,
+          label: categoryLabels[slug] ?? slug,
+          items,
+        }))
+
+    if (categoryFilter !== 'all') {
+      return groups.filter((g) => g.slug === categoryFilter)
+    }
+    return groups.filter((g) => g.items.length > 0)
+  }, [filteredProducts, taxonomy.categories, categoryFilter, categoryLabels])
+
+  const hasActiveFilters =
+    categoryFilter !== 'all' || sizeFilter !== 'all' || tagFilter !== 'all' || productQuery.trim() !== ''
+
+  function updateOrderFilters(next: {
+    q?: string
+    category?: string
+    size?: string
+    tag?: string
+  }) {
+    const params = new URLSearchParams(searchParams.toString())
+    const setOrDelete = (key: string, value: string | undefined, defaultValue = 'all') => {
+      if (!value || value === defaultValue) params.delete(key)
+      else params.set(key, value)
+    }
+    if (next.q !== undefined) setOrDelete('q', next.q.trim() || undefined, '')
+    if (next.category !== undefined) setOrDelete('category', next.category)
+    if (next.size !== undefined) setOrDelete('size', next.size)
+    if (next.tag !== undefined) setOrDelete('tag', next.tag)
+    const qs = params.toString()
+    router.replace(qs ? `/order?${qs}` : '/order', { scroll: false })
+  }
+
+  function clearFilters() {
+    setProductQuery('')
+    setCategoryFilter('all')
+    setSizeFilter('all')
+    setTagFilter('all')
+    router.replace('/order', { scroll: false })
+  }
+
+  function handleCategoryChange(slug: string) {
+    setCategoryFilter(slug)
+    if (slug !== 'all' && sizeFilter !== 'all') {
+      const valid = taxonomy.sizes.some(
+        (s) => s.categorySlug === slug && s.label === sizeFilter,
+      )
+      if (!valid) {
+        setSizeFilter('all')
+        updateOrderFilters({ category: slug, size: 'all' })
+        return
+      }
+    }
+    updateOrderFilters({ category: slug })
+  }
 
   const shippingDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -280,50 +438,196 @@ export function OrderCheckout() {
       <div className="lg:col-span-2">
         {step === 'cart' && (
           <>
-            <h2 className="text-2xl text-[#1a1f71] mb-6">Available Products</h2>
+            <div className="mb-6 space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-2xl text-[#1a1f71]">Available Products</h2>
+                <div className="relative w-full sm:max-w-sm">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={productQuery}
+                    onChange={(e) => {
+                      setProductQuery(e.target.value)
+                      updateOrderFilters({ q: e.target.value })
+                    }}
+                    placeholder="Search products…"
+                    className="w-full rounded-full border-2 border-gray-200 py-2.5 pl-10 pr-4 text-sm focus:border-[#2563eb] focus:outline-none"
+                    aria-label="Search products"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-gray-700">Filter products</p>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="inline-flex items-center gap-1 text-sm text-[#2563eb] hover:underline"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Category
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryChange('all')}
+                      className={`rounded-full px-4 py-1.5 text-sm transition-all ${
+                        categoryFilter === 'all'
+                          ? 'bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white'
+                          : 'border border-gray-200 bg-gray-50 text-gray-700 hover:border-[#2563eb]'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {taxonomy.categories.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        type="button"
+                        onClick={() => handleCategoryChange(cat.slug)}
+                        className={`rounded-full px-4 py-1.5 text-sm transition-all ${
+                          categoryFilter === cat.slug
+                            ? 'bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white'
+                            : 'border border-gray-200 bg-gray-50 text-gray-700 hover:border-[#2563eb]'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {sizeOptions.length > 1 && (
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Size
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {sizeOptions.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => {
+                            setSizeFilter(size)
+                            updateOrderFilters({ size })
+                          }}
+                          className={`rounded-full px-4 py-1.5 text-sm transition-all ${
+                            sizeFilter === size
+                              ? 'bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white'
+                              : 'border border-gray-200 bg-gray-50 text-gray-700 hover:border-[#2563eb]'
+                          }`}
+                        >
+                          {size === 'all' ? 'All sizes' : size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTagOptions.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Tags
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTagFilter('all')
+                          updateOrderFilters({ tag: 'all' })
+                        }}
+                        className={`rounded-full px-4 py-1.5 text-sm transition-all ${
+                          tagFilter === 'all'
+                            ? 'bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white'
+                            : 'border border-gray-200 bg-gray-50 text-gray-700 hover:border-[#2563eb]'
+                        }`}
+                      >
+                        All tags
+                      </button>
+                      {activeTagOptions.map((tag) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => {
+                            setTagFilter(tag.slug)
+                            updateOrderFilters({ tag: tag.slug })
+                          }}
+                          className={`rounded-full px-4 py-1.5 text-sm transition-all ${
+                            tagFilter === tag.slug
+                              ? 'bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white'
+                              : 'border border-gray-200 bg-gray-50 text-gray-700 hover:border-[#2563eb]'
+                          }`}
+                        >
+                          {tag.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             {loadingProducts ? (
               <div className="bg-white rounded-xl shadow p-12 text-center text-gray-500">
                 Loading products…
               </div>
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
               <div className="bg-white rounded-xl shadow p-12 text-center text-gray-500">
-                No products available right now. Please check back later.
+                {hasActiveFilters
+                  ? 'No products match your filters. Try adjusting category, size, tags, or search.'
+                  : 'No products available right now. Please check back later.'}
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-6">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    id={productSlug(product.name, product.size)}
-                    className="scroll-mt-32 bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-                  >
-                    <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-                      <Package className="w-20 h-20 text-[#2563eb]" />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl text-[#1a1f71] mb-2">{product.name}</h3>
-                      <div className="text-lg text-[#2563eb] mb-2">{product.size}</div>
-                      {product.description && (
-                        <p className="text-gray-600 text-sm mb-4">{product.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl text-[#1a1f71]">
-                          ₦{(product.price ?? 0).toLocaleString()}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => addToCart(product)}
-                          className="bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white px-6 py-2 rounded-full hover:shadow-lg transition-all flex items-center gap-2"
+              <div className="space-y-10">
+                {groupedProducts.map((group) => (
+                  <section key={group.slug}>
+                    {categoryFilter === 'all' && (
+                      <h3 className="mb-4 text-lg font-semibold text-[#1a1f71]">{group.label}</h3>
+                    )}
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      {group.items.map((product) => (
+                        <div
+                          key={product.id}
+                          id={productSlug(product.name, product.size)}
+                          className="scroll-mt-32 bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                         >
-                          <Plus className="w-4 h-4" />
-                          Add
-                        </button>
-                      </div>
-                      <div className="text-sm text-gray-500 mt-2">
-                        Stock: {(product.stock ?? 0).toLocaleString()} units
-                      </div>
+                          <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+                            <Package className="w-20 h-20 text-[#2563eb]" />
+                          </div>
+                          <div className="p-6">
+                            <h3 className="text-xl text-[#1a1f71] mb-2">{product.name}</h3>
+                            <div className="text-lg text-[#2563eb] mb-2">{product.size}</div>
+                            {product.description && (
+                              <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-2xl text-[#1a1f71]">
+                                ₦{(product.price ?? 0).toLocaleString()}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addToCart(product)}
+                                className="bg-gradient-to-r from-[#1a1f71] to-[#2563eb] text-white px-6 py-2 rounded-full hover:shadow-lg transition-all flex items-center gap-2"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add
+                              </button>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-2">
+                              Stock: {(product.stock ?? 0).toLocaleString()} units
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </section>
                 ))}
               </div>
             )}

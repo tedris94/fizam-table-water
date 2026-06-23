@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { Mail, Linkedin, Twitter } from 'lucide-react'
+import { ObfuscatedEmail } from '@/components/frontend/ObfuscatedEmail'
+import { TeamMemberAvatar } from '@/components/frontend/TeamMemberAvatar'
 
 export type TeamMemberCard = {
   id: string
@@ -9,7 +11,8 @@ export type TeamMemberCard = {
   position: string
   department: string
   bio: string
-  email: string
+  emailEncoded?: string
+  photoUrl?: string | null
   linkedin?: string | null
   twitter?: string | null
 }
@@ -51,23 +54,21 @@ export function TeamGrid({ members }: { members: TeamMemberCard[] }) {
             key={member.id}
             className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all"
           >
-            <div className="h-64 bg-gradient-to-br from-[#1a1f71] to-[#2563eb] flex items-center justify-center text-white text-6xl">
-              {member.name.charAt(0)}
-            </div>
+            <TeamMemberAvatar name={member.name} photoUrl={member.photoUrl} />
             <div className="p-6">
               <h3 className="text-2xl text-[#1a1f71] mb-2">{member.name}</h3>
               <p className="text-lg text-[#2563eb] mb-1">{member.position}</p>
               <p className="text-sm text-gray-500 mb-4">{member.department}</p>
               <p className="text-gray-600 mb-6">{member.bio}</p>
               <div className="flex items-center gap-3">
-                {member.email && (
-                  <a
-                    href={`mailto:${member.email}`}
+                {member.emailEncoded && (
+                  <ObfuscatedEmail
+                    encoded={member.emailEncoded}
                     className="w-10 h-10 rounded-full bg-gray-100 hover:bg-[#2563eb] hover:text-white transition-colors flex items-center justify-center"
-                    aria-label={`Email ${member.name}`}
+                    ariaLabel={`Email ${member.name}`}
                   >
                     <Mail className="w-5 h-5" />
-                  </a>
+                  </ObfuscatedEmail>
                 )}
                 {member.linkedin && (
                   <a

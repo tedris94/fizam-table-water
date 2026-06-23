@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { renderEmailTemplate } from '@/lib/emailTemplateEngine'
 
 /**
  * Values shipped in `.env.example` that should be treated as "no real SMTP
@@ -38,6 +39,43 @@ export function getMailer() {
 export const defaultFromAddress = () =>
   process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || 'noreply@fizam.ng'
 
+function parseEmailAddress(raw: string): { name?: string; address: string } {
+  const trimmed = raw.trim()
+  const bracket = trimmed.match(/^(.+?)\s*<([^>]+)>$/)
+  if (bracket) {
+    const name = bracket[1].trim().replace(/^["']|["']$/g, '')
+    return { name: name || undefined, address: bracket[2].trim() }
+  }
+  return { address: trimmed }
+}
+
+function formatEmailAddress({ name, address }: { name?: string; address: string }): string {
+  return name ? `"${name}" <${address}>` : address
+}
+
+/**
+ * Shared hosting often requires the SMTP-authenticated mailbox as the envelope
+ * sender. Keep a branded display name but align the address with SMTP_USER.
+ */
+export function resolveOutboundFrom(displayFrom?: string): { from: string; replyTo?: string } {
+  const smtpUser = process.env.SMTP_USER?.trim()
+  const parsed = parseEmailAddress(displayFrom?.trim() || defaultFromAddress())
+
+  if (!smtpUser) {
+    return { from: formatEmailAddress(parsed) }
+  }
+
+  const auth = parseEmailAddress(smtpUser)
+  if (parsed.address.toLowerCase() === auth.address.toLowerCase()) {
+    return { from: formatEmailAddress(parsed) }
+  }
+
+  return {
+    from: formatEmailAddress({ name: parsed.name ?? auth.name, address: auth.address }),
+    replyTo: parsed.address,
+  }
+}
+
 /**
  * Split `CONTACT_NOTIFY_EMAIL` / `HR_NOTIFY_EMAIL` on commas or semicolons.
  * Nodemailer accepts a comma-separated string for multiple recipients.
@@ -58,19 +96,43 @@ export async function sendMail(opts: {
   html?: string
   /** Optional From header (e.g. sales@ for orders). Falls back to `defaultFromAddress()`. */
   from?: string
+  /** Reply-To header (e.g. hr@ for careers). */
+  replyTo?: string
 }) {
   const transporter = getMailer()
   if (!transporter) {
     console.warn('[email] SMTP not configured — message skipped:', opts.subject)
-    return { skipped: true as const }
+    return { skipped: true as const, messageId: undefined as string | undefined }
   }
 
-  const { from: fromOverride, ...rest } = opts
-  await transporter.sendMail({
-    from: fromOverride?.trim() || defaultFromAddress(),
+  const { from: fromOverride, replyTo: replyToOverride, ...rest } = opts
+  const resolved = resolveOutboundFrom(fromOverride)
+  const smtpUser = process.env.SMTP_USER?.trim()
+  const envelopeFrom = smtpUser ? parseEmailAddress(smtpUser).address : parseEmailAddress(resolved.from).address
+
+  const info = await transporter.sendMail({
+    from: resolved.from,
+    envelope: {
+      from: envelopeFrom,
+      to: opts.to,
+    },
+    ...(replyToOverride?.trim()
+      ? { replyTo: replyToOverride.trim() }
+      : resolved.replyTo
+        ? { replyTo: resolved.replyTo }
+        : {}),
     ...rest,
   })
-  return { skipped: false as const }
+
+  console.info('[email] sent', {
+    to: opts.to,
+    subject: opts.subject,
+    messageId: info.messageId,
+    accepted: info.accepted,
+    rejected: info.rejected,
+  })
+
+  return { skipped: false as const, messageId: info.messageId }
 }
 
 export async function notifyContactLead(payload: {
@@ -87,18 +149,25 @@ export async function notifyContactLead(payload: {
   const internalFrom =
     process.env.SMTP_FROM_INTERNAL?.trim() || process.env.SMTP_FROM?.trim() || undefined
 
+  const rendered = await renderEmailTemplate('contact-lead-notification', {
+    name: payload.name,
+    email: payload.email,
+    phone: payload.phone,
+    orderType: payload.orderType,
+    message: payload.message,
+  })
+
+  if (!rendered.enabled) {
+    console.warn('[email] template disabled, skipped: contact-lead-notification')
+    return { skipped: true as const }
+  }
+
   await sendMail({
     from: internalFrom,
     to: adminEmail,
-    subject: `[Fizam Website] Message from ${payload.name}`,
-    text: [
-      `Name: ${payload.name}`,
-      `Email: ${payload.email}`,
-      `Phone: ${payload.phone}`,
-      `Order type: ${payload.orderType}`,
-      '',
-      payload.message,
-    ].join('\n'),
+    subject: rendered.subject,
+    text: rendered.text,
+    html: rendered.html,
   })
   return { skipped: false as const }
 }
@@ -107,24 +176,18 @@ export async function notifyNewApplication(payload: {
   applicantName: string
   jobTitle: string
   email: string
+  applicationRef?: string
 }) {
-  const hrEmail =
-    normalizeRecipients(process.env.HR_NOTIFY_EMAIL) ||
-    normalizeRecipients(process.env.CONTACT_NOTIFY_EMAIL) ||
-    normalizeRecipients(process.env.SMTP_USER)
-  if (!hrEmail) return
-
-  const internalFrom =
-    process.env.SMTP_FROM_INTERNAL?.trim() || process.env.SMTP_FROM?.trim() || undefined
-
-  await sendMail({
-    from: internalFrom,
-    to: hrEmail,
-    subject: `[Fizam Careers] Application — ${payload.jobTitle}`,
-    text: `${payload.applicantName} applied for "${payload.jobTitle}" (${payload.email}).`,
+  const { notifyHrNewApplication } = await import('@/lib/applicationEmails')
+  await notifyHrNewApplication({
+    applicantName: payload.applicantName,
+    jobTitle: payload.jobTitle,
+    email: payload.email,
+    applicationRef: payload.applicationRef ?? 'N/A',
   })
 }
 
+/** @deprecated Use sendOrderConfirmationEmail from orderEmails */
 export async function sendOrderConfirmation(payload: {
   to: string
   customerName: string
@@ -132,26 +195,20 @@ export async function sendOrderConfirmation(payload: {
   total: number
   reference?: string | null
 }) {
-  const ordersFrom =
-    process.env.SMTP_FROM_ORDERS?.trim() || process.env.SMTP_FROM?.trim() || undefined
-
-  await sendMail({
-    from: ordersFrom,
-    to: payload.to,
-    subject: `Fizam — Order confirmation #${payload.orderId}`,
-    text: [
-      `Hi ${payload.customerName},`,
-      '',
-      'Thank you for your order with Fizam Table Water.',
-      `Order ID: ${payload.orderId}`,
-      `Total: ₦${payload.total.toLocaleString('en-NG')}`,
-      payload.reference ? `Payment reference: ${payload.reference}` : '',
-      '',
-      'We will contact you about delivery.',
-      '',
-      '— Fizam Table Water',
-    ]
-      .filter(Boolean)
-      .join('\n'),
-  })
+  const { sendOrderConfirmationEmail } = await import('@/lib/orderEmails')
+  return sendOrderConfirmationEmail({
+    id: typeof payload.orderId === 'number' ? payload.orderId : Number(payload.orderId),
+    shipping: {
+      fullName: payload.customerName,
+      email: payload.to,
+      phone: '',
+      address: '',
+    },
+    total: payload.total,
+    paystackReference: payload.reference ?? null,
+    status: 'paid',
+    items: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as import('@/payload-types').Order)
 }

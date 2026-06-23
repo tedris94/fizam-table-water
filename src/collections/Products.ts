@@ -4,7 +4,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'size', 'price', 'stock'],
+    defaultColumns: ['category', 'name', 'size', 'price', 'stock'],
   },
   access: {
     read: () => true,
@@ -14,6 +14,16 @@ export const Products: CollectionConfig = {
       (req.user as { role?: string } | undefined)?.role === 'super_admin',
   },
   fields: [
+    {
+      name: 'category',
+      type: 'text',
+      required: true,
+      defaultValue: 'table_water',
+      admin: {
+        position: 'sidebar',
+        description: 'Category slug (managed in Dashboard → Products → Categories).',
+      },
+    },
     { name: 'name', type: 'text', required: true },
     { name: 'size', type: 'text', required: true },
     { name: 'price', type: 'number', required: true, min: 0 },
@@ -24,5 +34,12 @@ export const Products: CollectionConfig = {
       relationTo: 'media',
     },
     { name: 'stock', type: 'number', required: true, defaultValue: 0, min: 0 },
+    {
+      name: 'tags',
+      type: 'relationship',
+      relationTo: 'product-tags',
+      hasMany: true,
+      admin: { description: 'Optional product tags for search and filtering.' },
+    },
   ],
 }

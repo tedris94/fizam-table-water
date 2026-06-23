@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getPayloadSingleton } from '@/lib/payload'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { getSiteSeoSettings } from '@/lib/site-settings-seo'
 import { Hero } from '@/components/frontend/Hero'
@@ -39,10 +40,11 @@ export default async function HomePage() {
   const heroSubtitle =
     home?.heroSubtitle ||
     'Order sachet, bottle, and dispenser water online with fast delivery across Nigeria.'
-  const heroImage =
+  const heroImage = resolveMediaUrl(
     home?.heroImage && typeof home.heroImage === 'object' && 'url' in home.heroImage
       ? String(home.heroImage.url)
-      : null
+      : null,
+  )
 
   return (
     <>

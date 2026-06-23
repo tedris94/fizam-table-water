@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
 import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
 import { Footer } from '@/components/frontend/Footer'
@@ -26,7 +27,9 @@ export default function OrderPage() {
               Fresh, quality-certified water delivered to your doorstep
             </p>
           </div>
-          <OrderCheckout />
+          <Suspense fallback={<div className="text-center text-gray-500">Loading checkout…</div>}>
+            <OrderCheckout />
+          </Suspense>
         </div>
       </div>
       <Footer />

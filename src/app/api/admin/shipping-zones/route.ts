@@ -42,8 +42,8 @@ function normalize(input: ZonePayload) {
   }
 }
 
-export async function GET() {
-  const user = await getCurrentUser()
+export async function GET(request: Request) {
+  const user = await getCurrentUser(request)
   if (!isAdmin(user?.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -74,7 +74,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser(request)
   if (!isAdmin(user?.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

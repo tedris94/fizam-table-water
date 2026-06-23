@@ -1,5 +1,7 @@
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 import { Logo } from '@/components/frontend/Logo';
+import { ObfuscatedEmail } from '@/components/frontend/ObfuscatedEmail';
+import { ENCODED_EMAILS } from '@/lib/obfuscateEmail';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -39,8 +41,13 @@ export function Footer() {
             <h4 className="text-xl mb-6">Our Products</h4>
             <ul className="space-y-3 text-blue-200">
               <li>
-                <a href="/#product-sachet-water-30cl" className="hover:text-white transition-colors">
-                  Sachet Water (30cl)
+                <a href="/#product-sachet-water-50cl" className="hover:text-white transition-colors">
+                  Sachet Water (50cl)
+                </a>
+              </li>
+              <li>
+                <a href="/#product-table-water-35cl" className="hover:text-white transition-colors">
+                  Table Water (35cl)
                 </a>
               </li>
               <li>
@@ -53,12 +60,13 @@ export function Footer() {
                   Table Water (75cl)
                 </a>
               </li>
+           
               <li>
                 <a
-                  href="/#product-dispenser-bottle-18-9l"
+                  href="/#product-dispenser-19l"
                   className="hover:text-white transition-colors"
                 >
-                  Dispenser Bottles
+                  Dispenser (19L)
                 </a>
               </li>
             </ul>
@@ -90,9 +98,10 @@ export function Footer() {
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <a href="mailto:info@fizamwater.com" className="hover:text-white transition-colors">
-                  info@fizamwater.com
-                </a>
+                <ObfuscatedEmail
+                  encoded={ENCODED_EMAILS.infoFizamWater}
+                  className="hover:text-white transition-colors"
+                />
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />

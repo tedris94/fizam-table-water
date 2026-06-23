@@ -1,4 +1,6 @@
 import { buildPageMetadata, titleWithBrand } from '@/lib/seo'
+import { encodeEmail } from '@/lib/obfuscateEmail'
+import { resolveMediaFromDoc } from '@/lib/mediaUrl'
 import { getPayloadSingleton } from '@/lib/payload'
 import { TeamGrid, type TeamMemberCard } from '@/components/frontend/TeamGrid'
 import { SimpleNavbar } from '@/components/frontend/SimpleNavbar'
@@ -21,7 +23,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'Chief Executive Officer',
     department: 'Executive',
     bio: 'Leading Fizam Table Water with 15+ years of experience in the beverage industry.',
-    email: 'john.adeyemi@fizam.com',
+    emailEncoded: encodeEmail('john.adeyemi@fizam.com'),
     linkedin: 'https://linkedin.com',
     twitter: 'https://twitter.com',
   },
@@ -31,7 +33,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'Production Manager',
     department: 'Operations',
     bio: 'Overseeing production processes to ensure quality and efficiency in water production.',
-    email: 'sarah.okonkwo@fizam.com',
+    emailEncoded: encodeEmail('sarah.okonkwo@fizam.com'),
     linkedin: 'https://linkedin.com',
   },
   {
@@ -40,7 +42,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'Quality Control Manager',
     department: 'Quality Assurance',
     bio: 'Ensuring every bottle meets our stringent quality standards and safety requirements.',
-    email: 'david.bello@fizam.com',
+    emailEncoded: encodeEmail('david.bello@fizam.com'),
   },
   {
     id: 'team-4',
@@ -48,7 +50,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'Sales Manager',
     department: 'Sales',
     bio: 'Driving sales growth and building strong relationships with distributors and retailers.',
-    email: 'grace.nnamdi@fizam.com',
+    emailEncoded: encodeEmail('grace.nnamdi@fizam.com'),
     linkedin: 'https://linkedin.com',
     twitter: 'https://twitter.com',
   },
@@ -58,7 +60,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'HR Director',
     department: 'Human Resources',
     bio: 'Managing talent acquisition and employee development programs.',
-    email: 'ahmed.ibrahim@fizam.com',
+    emailEncoded: encodeEmail('ahmed.ibrahim@fizam.com'),
   },
   {
     id: 'team-6',
@@ -66,7 +68,7 @@ const FALLBACK_TEAM: TeamMemberCard[] = [
     position: 'Marketing Manager',
     department: 'Marketing',
     bio: 'Creating innovative marketing strategies to expand our brand reach.',
-    email: 'blessing.eze@fizam.com',
+    emailEncoded: encodeEmail('blessing.eze@fizam.com'),
     linkedin: 'https://linkedin.com',
   },
 ]
@@ -79,6 +81,7 @@ export default async function TeamPage() {
       collection: 'team-members',
       limit: 100,
       sort: 'sortOrder',
+      depth: 1,
     })
     if (result.docs.length > 0) {
       members = result.docs.map((doc): TeamMemberCard => ({
@@ -87,7 +90,8 @@ export default async function TeamPage() {
         position: doc.position,
         department: doc.department || 'Team',
         bio: doc.bio || '',
-        email: doc.email || '',
+        emailEncoded: doc.email ? encodeEmail(doc.email) : undefined,
+        photoUrl: resolveMediaFromDoc(doc.photo),
         linkedin: doc.linkedin || undefined,
         twitter: doc.twitter || undefined,
       }))

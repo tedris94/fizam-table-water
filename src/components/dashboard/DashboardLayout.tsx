@@ -18,21 +18,55 @@ import {
   Layout as LayoutIcon,
   MapPin,
   Activity,
+  ChevronDown,
+  Layers,
+  Ruler,
+  Tags,
+  Mail,
+  Shield,
+  UserCog,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { DASHBOARD_MENU } from '@/lib/capabilities'
 import { Logo } from '@/components/frontend/Logo'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 interface DashboardLayoutProps {
   children: ReactNode
   title: string
-  role: string
+  role?: string
 }
 
-export function DashboardLayout({ children, title, role }: DashboardLayoutProps) {
+const MENU_ICONS: Record<string, typeof LayoutDashboard> = {
+  home: LayoutDashboard,
+  analytics: TrendingUp,
+  products: Package,
+  orders: ShoppingCart,
+  shipping: MapPin,
+  team: Users,
+  careers: Briefcase,
+  applications: FileText,
+  organogram: Users,
+  cms: LayoutIcon,
+  settings: Settings,
+  'email-templates': Mail,
+  users: UserCog,
+  roles: Shield,
+  diagnostics: Activity,
+}
+
+const CHILD_ICONS: Record<string, typeof Package> = {
+  '/dashboard/products': Package,
+  '/dashboard/products/categories': Layers,
+  '/dashboard/products/sizes': Ruler,
+  '/dashboard/products/tags': Tags,
+}
+
+export function DashboardLayout({ children, title, role: roleProp }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { signOut, user } = useAuth()
-  const router = useRouter()
+  const [productsOpen, setProductsOpen] = useState(false)
+  const { signOut, user, roleName, hasAnyCap, hasCap } = useAuth()
+  const role = user?.role ?? roleProp ?? 'user'
   const pathname = usePathname()
   /** Only mount the dimmed scrim on small viewports — avoids relying on `lg:hidden` alone (can miss in some Tailwind builds). */
   const isMobileNav = useMediaQuery('(max-width: 1023px)')
@@ -64,87 +98,17 @@ export function DashboardLayout({ children, title, role }: DashboardLayoutProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [sidebarOpen, closeSidebar])
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/login')
+  const handleSignOut = () => {
+    void signOut()
   }
 
-  const menuItems = [
-    {
-      icon: LayoutDashboard,
-      label: 'Dashboard',
-      path: '/dashboard',
-      roles: ['super_admin', 'admin', 'hr', 'user', 'customer'],
-    },
-    {
-      icon: TrendingUp,
-      label: 'Analytics',
-      path: '/dashboard/analytics',
-      roles: ['super_admin', 'admin'],
-    },
-    {
-      icon: Package,
-      label: 'Products',
-      path: '/dashboard/products',
-      roles: ['super_admin', 'admin'],
-    },
-    {
-      icon: ShoppingCart,
-      label: 'Orders',
-      path: '/dashboard/orders',
-      roles: ['super_admin', 'admin'],
-    },
-    {
-      icon: MapPin,
-      label: 'Delivery locations',
-      path: '/dashboard/shipping-zones',
-      roles: ['super_admin', 'admin'],
-    },
-    {
-      icon: Users,
-      label: 'Team',
-      path: '/dashboard/team',
-      roles: ['super_admin', 'admin', 'hr'],
-    },
-    {
-      icon: Briefcase,
-      label: 'Careers',
-      path: '/dashboard/careers',
-      roles: ['super_admin', 'hr'],
-    },
-    {
-      icon: FileText,
-      label: 'Applications',
-      path: '/dashboard/applications',
-      roles: ['super_admin', 'hr'],
-    },
-    {
-      icon: Users,
-      label: 'Organogram',
-      path: '/dashboard/organogram',
-      roles: ['super_admin', 'admin', 'hr'],
-    },
-    {
-      icon: LayoutIcon,
-      label: 'CMS',
-      path: '/dashboard/cms',
-      roles: ['super_admin', 'admin'],
-    },
-    {
-      icon: Settings,
-      label: 'Settings',
-      path: '/dashboard/settings',
-      roles: ['super_admin', 'admin', 'hr', 'user', 'customer'],
-    },
-    {
-      icon: Activity,
-      label: 'Diagnostics',
-      path: '/dashboard/diagnostics',
-      roles: ['super_admin'],
-    },
-  ]
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/products')) {
+      setProductsOpen(true)
+    }
+  }, [pathname])
 
-  const filteredMenuItems = menuItems.filter((item) => item.roles.includes(role))
+  const filteredMenuItems = DASHBOARD_MENU.filter((item) => hasAnyCap(item.capabilities))
 
   /**
    * Tap-outside to close the drawer on small screens only.
@@ -173,8 +137,8 @@ export function DashboardLayout({ children, title, role }: DashboardLayoutProps)
         lg:translate-x-0
       `}
       >
-        <div className="flex-shrink-0 p-6">
-          <div className="mb-8 flex items-center justify-between gap-2">
+        <div className="flex-shrink-0 border-b border-white/10 p-6 pb-4">
+          <div className="flex items-center justify-between gap-2">
             <Link
               href="/dashboard"
               className="flex min-w-0 flex-1 items-center gap-2"
@@ -187,33 +151,84 @@ export function DashboardLayout({ children, title, role }: DashboardLayoutProps)
               <X className="h-6 w-6" />
             </button>
           </div>
-
-          <nav className="space-y-1">
-            {filteredMenuItems.map((item) => {
-              const Icon = item.icon
-              const active = pathname === item.path
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
-                    active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10'
-                  }`}
-                  onClick={closeSidebar}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </nav>
         </div>
 
-        <div className="mt-auto flex-shrink-0 border-t border-white/10 p-6">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3">
+          {filteredMenuItems.map((item) => {
+            const Icon = MENU_ICONS[item.id] ?? LayoutDashboard
+            const hasChildren = item.children && item.children.length > 0
+            const visibleChildren = item.children?.filter((child) => hasCap(child.capability)) ?? []
+            const isProductsSection = item.id === 'products' && visibleChildren.length > 0
+            const active =
+              pathname === item.path ||
+              (isProductsSection && pathname.startsWith('/dashboard/products'))
+
+            if (isProductsSection) {
+              return (
+                <div key={item.path}>
+                  <button
+                    type="button"
+                    onClick={() => setProductsOpen((open) => !open)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                      active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {productsOpen && (
+                    <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-2">
+                      {visibleChildren.map((child) => {
+                        const ChildIcon = CHILD_ICONS[child.path] ?? Package
+                        const childActive = pathname === child.path
+                        return (
+                          <Link
+                            key={child.path}
+                            href={child.path}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                              childActive
+                                ? 'bg-white/20 text-white'
+                                : 'text-blue-100 hover:bg-white/10'
+                            }`}
+                            onClick={closeSidebar}
+                          >
+                            <ChildIcon className="h-4 w-4 shrink-0" />
+                            <span>{child.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                  active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10'
+                }`}
+                onClick={closeSidebar}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div className="flex-shrink-0 border-t border-white/10 p-4">
           <div className="mb-4 text-sm text-blue-200">
             <div className="font-medium text-white">{user?.fullName}</div>
             <div>{user?.email}</div>
-            <div className="mt-1 capitalize text-xs opacity-80">{role.replace('_', ' ')}</div>
+            <div className="mt-1 capitalize text-xs opacity-80">
+              {(roleName ?? role).replace(/_/g, ' ')}
+            </div>
           </div>
           <button
             type="button"
@@ -241,9 +256,20 @@ export function DashboardLayout({ children, title, role }: DashboardLayoutProps)
               </button>
               <h1 className="text-xl font-semibold text-[#1a1f71] lg:text-2xl">{title}</h1>
             </div>
-            <Link href="/" className="text-sm text-[#2563eb] hover:underline">
-              View Site
-            </Link>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Link href="/" className="text-sm text-[#2563eb] hover:underline">
+                View Site
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-red-600"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
           </div>
         </header>
 

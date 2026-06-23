@@ -29,8 +29,9 @@ export async function getPayloadSingleton() {
   if (!cachedPromise) {
     cachedPromise = (async () => {
       const { getPayload } = await import('payload')
-      const { default: config } = await import('@payload-config')
-      return getPayload({ config })
+      const { default: payloadConfig } = await import('@payload-config')
+      // Match @payloadcms/next REST routes so auth/JWT signing uses one instance.
+      return getPayload({ config: payloadConfig, cron: true })
     })().catch((error) => {
       cachedPromise = null
       throw error

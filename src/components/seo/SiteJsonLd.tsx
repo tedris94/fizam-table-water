@@ -74,7 +74,7 @@ export async function SiteJsonLd() {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${absoluteUrl('/order')}?q={search_term_string}`,
+        urlTemplate: `${absoluteUrl('/search')}?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

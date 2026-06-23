@@ -1,19 +1,15 @@
 'use client'
 
 import { CareersView } from '@/components/dashboard/CareersView'
-import { ForbiddenPanel } from '@/components/dashboard/ForbiddenPanel'
+import { DashboardPageGuard } from '@/components/dashboard/DashboardPageGuard'
 import { useAuth } from '@/contexts/AuthContext'
 
-export default function CareersDashboardPage() {
-  const { user, loading } = useAuth()
+export default function CareersPage() {
+  const { user } = useAuth()
 
-  if (loading) {
-    return <p className="p-8 text-[#1a1f71]">Loading…</p>
-  }
-
-  if (!user || !['super_admin', 'hr'].includes(user.role)) {
-    return <ForbiddenPanel />
-  }
-
-  return <CareersView role={user.role} />
+  return (
+    <DashboardPageGuard capability="careers.manage">
+      <CareersView role={user?.role ?? 'user'} />
+    </DashboardPageGuard>
+  )
 }
