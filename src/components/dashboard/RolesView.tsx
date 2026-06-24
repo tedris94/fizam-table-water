@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DashboardLayout } from './DashboardLayout'
-import { ALL_CAPABILITIES } from '@/lib/capabilities'
+import { ALL_CAPABILITIES, type CapabilityDef } from '@/lib/capabilities'
 import { canDeleteRole } from '@/lib/roleAssignments'
 import { useAuth } from '@/contexts/AuthContext'
 import { Plus, Save, Shield, Trash2, X } from 'lucide-react'
@@ -37,7 +37,7 @@ export function RolesView() {
   const selected = roles.find((r) => r.slug === selectedSlug) ?? null
 
   const groupedCaps = useMemo(() => {
-    const groups = new Map<string, typeof ALL_CAPABILITIES>()
+    const groups = new Map<string, CapabilityDef[]>()
     for (const def of ALL_CAPABILITIES) {
       const list = groups.get(def.group) ?? []
       list.push(def)

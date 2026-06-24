@@ -1,7 +1,7 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-sqlite'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  const { rows } = await db.run<{ name: string }>(
+  const { rows } = await db.run(
     sql`SELECT name FROM pragma_table_info('products') WHERE name = 'category'`,
   )
   if (!rows.length) {

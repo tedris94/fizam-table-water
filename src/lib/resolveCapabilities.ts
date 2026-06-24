@@ -2,6 +2,7 @@ import {
   ALL_CAPABILITIES,
   ALL_CAPABILITY_KEYS,
   capabilitiesForRoleSlug,
+  type CapabilityDef,
   DEFAULT_ROLE_CAPABILITIES,
   toCapabilityPayload,
 } from '@/lib/capabilities'
@@ -107,7 +108,7 @@ export async function getCapabilitiesForUser(user: {
 }
 
 export function groupCapabilitiesByGroup() {
-  const groups = new Map<string, typeof ALL_CAPABILITIES>()
+  const groups = new Map<string, CapabilityDef[]>()
   for (const def of ALL_CAPABILITIES) {
     const list = groups.get(def.group) ?? []
     list.push(def)

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ALL_CAPABILITY_KEYS, toCapabilityPayload } from '@/lib/capabilities'
+import { isCapabilityKey, toCapabilityPayload } from '@/lib/capabilities'
 import { authorizeCapability } from '@/lib/dashboardAuth'
 import { slugifyRoleName } from '@/lib/roleAssignments'
 import {
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     const capabilities = (body.capabilities?.length
       ? body.capabilities
       : ['dashboard.home', 'settings.view']
-    ).filter((k) => ALL_CAPABILITY_KEYS.includes(k))
+    ).filter(isCapabilityKey)
 
     const payload = await getPayloadSingleton()
     const created = await payload.create({

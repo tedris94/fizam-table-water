@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser, isAdminRole } from '@/lib/auth'
 import { getPayloadSingleton } from '@/lib/payload'
-import { toTeamMemberResponse } from '@/lib/teamMemberApi'
+import { photoIdForPayload, toTeamMemberResponse } from '@/lib/teamMemberApi'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -52,7 +52,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     if (body.twitter !== undefined) data.twitter = String(body.twitter).trim() || null
     if (body.sortOrder !== undefined) data.sortOrder = Number(body.sortOrder) || 0
     if (body.photoId !== undefined) {
-      data.photo = body.photoId === null || body.photoId === '' ? null : body.photoId
+      data.photo = photoIdForPayload(body.photoId) ?? null
     }
 
     const payload = await getPayloadSingleton()

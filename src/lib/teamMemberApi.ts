@@ -1,5 +1,14 @@
 import { resolveMediaFromDoc } from '@/lib/mediaUrl'
 
+export function photoIdForPayload(
+  photoId: number | string | null | undefined,
+): number | null | undefined {
+  if (photoId === undefined) return undefined
+  if (photoId === null || photoId === '') return null
+  const n = typeof photoId === 'number' ? photoId : Number(photoId)
+  return Number.isFinite(n) ? n : undefined
+}
+
 export function photoIdFromDoc(photo: { id?: number | string; url?: string | null; filename?: string | null } | number | null | undefined) {
   if (!photo) return null
   if (typeof photo === 'object') return photo.id ?? null

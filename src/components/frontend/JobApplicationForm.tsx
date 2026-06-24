@@ -230,25 +230,25 @@ export function JobApplicationForm({ jobSlug, jobTitle }: Props) {
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               <input
-                value={entry.fieldOfStudy}
+                value={entry.fieldOfStudy ?? ''}
                 onChange={(e) => updateEducation(index, { fieldOfStudy: e.target.value })}
                 placeholder="Field of study"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               <input
-                value={entry.grade}
+                value={entry.grade ?? ''}
                 onChange={(e) => updateEducation(index, { grade: e.target.value })}
                 placeholder="Grade / class (optional)"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               <input
-                value={entry.startYear}
+                value={entry.startYear ?? ''}
                 onChange={(e) => updateEducation(index, { startYear: e.target.value })}
                 placeholder="Start year"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               <input
-                value={entry.endYear}
+                value={entry.endYear ?? ''}
                 onChange={(e) => updateEducation(index, { endYear: e.target.value })}
                 placeholder="End year"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
@@ -304,7 +304,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: Props) {
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               <input
-                value={entry.location}
+                value={entry.location ?? ''}
                 onChange={(e) => updateWork(index, { location: e.target.value })}
                 placeholder="Location"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
@@ -320,14 +320,14 @@ export function JobApplicationForm({ jobSlug, jobTitle }: Props) {
                 I currently work here
               </label>
               <input
-                value={entry.startDate}
+                value={entry.startDate ?? ''}
                 onChange={(e) => updateWork(index, { startDate: e.target.value })}
                 placeholder="Start (e.g. Jan 2020)"
                 className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
               />
               {!entry.current && (
                 <input
-                  value={entry.endDate}
+                  value={entry.endDate ?? ''}
                   onChange={(e) => updateWork(index, { endDate: e.target.value })}
                   placeholder="End (e.g. Dec 2023)"
                   className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#2563eb] focus:outline-none"
@@ -335,7 +335,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: Props) {
               )}
             </div>
             <textarea
-              value={entry.description}
+              value={entry.description ?? ''}
               onChange={(e) => updateWork(index, { description: e.target.value })}
               rows={3}
               placeholder="Key responsibilities and achievements"

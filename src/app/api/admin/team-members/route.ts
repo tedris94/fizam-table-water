@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser, isAdminRole } from '@/lib/auth'
 import { getPayloadSingleton } from '@/lib/payload'
-import { toTeamMemberResponse } from '@/lib/teamMemberApi'
+import { photoIdForPayload, toTeamMemberResponse } from '@/lib/teamMemberApi'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
     }
 
     const payload = await getPayloadSingleton()
+    const photo = photoIdForPayload(body.photoId)
     const created = await payload.create({
       collection: 'team-members',
       data: {
@@ -66,9 +67,7 @@ export async function POST(request: Request) {
         linkedin: body.linkedin?.trim() || undefined,
         twitter: body.twitter?.trim() || undefined,
         sortOrder: Number.isFinite(body.sortOrder) ? Number(body.sortOrder) : 0,
-        ...(body.photoId != null && body.photoId !== ''
-          ? { photo: body.photoId }
-          : {}),
+        ...(photo !== undefined ? { photo } : {}),
       },
       overrideAccess: true,
     })

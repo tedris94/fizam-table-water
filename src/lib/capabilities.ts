@@ -6,7 +6,7 @@ export type CapabilityDef = {
 }
 
 /** Every permission the dashboard understands. Super admin can assign these per role. */
-export const ALL_CAPABILITIES: CapabilityDef[] = [
+export const ALL_CAPABILITIES = [
   { key: 'dashboard.home', label: 'Dashboard home', group: 'General' },
   { key: 'analytics.view', label: 'Analytics', group: 'General' },
   { key: 'products.catalog', label: 'Product catalog', group: 'Products' },
@@ -29,15 +29,18 @@ export const ALL_CAPABILITIES: CapabilityDef[] = [
   { key: 'diagnostics.view', label: 'System diagnostics', group: 'System' },
   { key: 'users.manage', label: 'Manage users', group: 'System' },
   { key: 'roles.manage', label: 'Manage roles & capabilities', group: 'System' },
-]
-
-export const ALL_CAPABILITY_KEYS = ALL_CAPABILITIES.map((c) => c.key)
+] as const satisfies readonly CapabilityDef[]
 
 export type CapabilityKey = (typeof ALL_CAPABILITIES)[number]['key']
 
+export const ALL_CAPABILITY_KEYS: CapabilityKey[] = ALL_CAPABILITIES.map((c) => c.key)
+
+export function isCapabilityKey(k: string): k is CapabilityKey {
+  return (ALL_CAPABILITY_KEYS as readonly string[]).includes(k)
+}
+
 export function toCapabilityPayload(keys: string[]): { key: CapabilityKey }[] {
-  const allowed = new Set(ALL_CAPABILITY_KEYS)
-  return keys.filter((k): k is CapabilityKey => allowed.has(k as CapabilityKey)).map((key) => ({ key }))
+  return keys.filter(isCapabilityKey).map((key) => ({ key }))
 }
 
 export type DashboardMenuChild = {

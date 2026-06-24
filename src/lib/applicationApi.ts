@@ -4,20 +4,20 @@ import { formatApplicationRef } from '@/lib/applicationRef'
 export type EducationEntry = {
   qualification: string
   institution: string
-  fieldOfStudy?: string
-  startYear?: string
-  endYear?: string
-  grade?: string
+  fieldOfStudy?: string | null
+  startYear?: string | null
+  endYear?: string | null
+  grade?: string | null
 }
 
 export type WorkEntry = {
   jobTitle: string
   company: string
-  location?: string
-  startDate?: string
-  endDate?: string
-  current?: boolean
-  description?: string
+  location?: string | null
+  startDate?: string | null
+  endDate?: string | null
+  current?: boolean | null
+  description?: string | null
 }
 
 import { hasCapability, capabilitiesForRoleSlug } from '@/lib/capabilities'

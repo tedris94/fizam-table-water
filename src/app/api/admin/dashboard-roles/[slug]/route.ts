@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ALL_CAPABILITY_KEYS, toCapabilityPayload } from '@/lib/capabilities'
+import { isCapabilityKey, toCapabilityPayload } from '@/lib/capabilities'
 import { authorizeCapability } from '@/lib/dashboardAuth'
 import { canDeleteRole } from '@/lib/roleAssignments'
 import { getDashboardRoleBySlug } from '@/lib/resolveCapabilities'
@@ -44,10 +44,11 @@ export async function PUT(request: Request, { params }: RouteContext) {
       capabilities?: string[]
     }
 
-    const capabilities = (body.capabilities ?? []).filter((k) => ALL_CAPABILITY_KEYS.includes(k))
+    const capabilities = (body.capabilities ?? []).filter(isCapabilityKey)
 
     if (slug === 'super_admin') {
-      for (const required of ['users.manage', 'roles.manage', 'diagnostics.view']) {
+      const requiredCaps = ['users.manage', 'roles.manage', 'diagnostics.view'] as const
+      for (const required of requiredCaps) {
         if (!capabilities.includes(required)) capabilities.push(required)
       }
     }
