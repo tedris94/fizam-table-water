@@ -23,6 +23,11 @@ data/*.db-journal
 data/*.db-wal
 data/*.db-shm
 
+# DB dumps / Turso backups (contain production data)
+backups/
+/fizam-dump.sql
+/local-dump-*.sql
+
 # Uploads (Payload media)
 media/
 

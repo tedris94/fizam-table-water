@@ -40,7 +40,17 @@ export const defaultFromAddress = () =>
   process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || 'noreply@fizam.ng'
 
 function parseEmailAddress(raw: string): { name?: string; address: string } {
-  const trimmed = raw.trim()
+  let trimmed = raw.trim()
+  // Tolerate a value wrapped in surrounding quotes. This happens when a
+  // `.env`-style value like `"Name <a@b.com>"` is pasted into a Vercel env
+  // var, where (unlike dotenv) the quotes are kept literally.
+  if (
+    trimmed.length >= 2 &&
+    ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim()
+  }
   const bracket = trimmed.match(/^(.+?)\s*<([^>]+)>$/)
   if (bracket) {
     const name = bracket[1].trim().replace(/^["']|["']$/g, '')
