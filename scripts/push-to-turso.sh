@@ -72,7 +72,18 @@ for attempt in 1 2 3 4 5 6; do
   sleep 10
 done
 [ -n "${CREATED}" ] || { echo "ERROR: could not recreate '${DB_NAME}'. Restore manually: turso db shell ${DB_NAME} < ${LOCAL_DUMP}"; exit 1; }
-turso db shell "${DB_NAME}" < "${LOCAL_DUMP}"
+
+# A freshly created DB's host needs a few seconds to become routable, otherwise
+# the load fails with "error code 502: no route configured for host ...".
+echo "    Waiting for the new endpoint to become routable ..."
+sleep 5
+LOADED=""
+for attempt in 1 2 3 4 5 6 7 8; do
+  if turso db shell "${DB_NAME}" < "${LOCAL_DUMP}"; then LOADED="yes"; break; fi
+  echo "    load attempt ${attempt} failed (endpoint warming up) — retrying in 8s ..."
+  sleep 8
+done
+[ -n "${LOADED}" ] || { echo "ERROR: data load failed. Retry manually: turso db shell ${DB_NAME} < ${LOCAL_DUMP}"; exit 1; }
 echo "    Live DB recreated and loaded from ${LOCAL_DUMP}."
 echo
 
