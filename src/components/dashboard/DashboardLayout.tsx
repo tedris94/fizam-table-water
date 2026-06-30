@@ -64,7 +64,7 @@ const CHILD_ICONS: Record<string, typeof Package> = {
 
 export function DashboardLayout({ children, title, role: roleProp }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [productsOpen, setProductsOpen] = useState(false)
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const { signOut, user, roleName, hasAnyCap, hasCap } = useAuth()
   const role = user?.role ?? roleProp ?? 'user'
   const pathname = usePathname()
@@ -103,8 +103,14 @@ export function DashboardLayout({ children, title, role: roleProp }: DashboardLa
   }
 
   useEffect(() => {
-    if (pathname.startsWith('/dashboard/products')) {
-      setProductsOpen(true)
+    for (const item of DASHBOARD_MENU) {
+      if (
+        item.children &&
+        item.children.length > 0 &&
+        (pathname === item.path || pathname.startsWith(item.path + '/'))
+      ) {
+        setOpenSections((prev) => (prev[item.id] ? prev : { ...prev, [item.id]: true }))
+      }
     }
   }, [pathname])
 
@@ -156,19 +162,19 @@ export function DashboardLayout({ children, title, role: roleProp }: DashboardLa
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3">
           {filteredMenuItems.map((item) => {
             const Icon = MENU_ICONS[item.id] ?? LayoutDashboard
-            const hasChildren = item.children && item.children.length > 0
             const visibleChildren = item.children?.filter((child) => hasCap(child.capability)) ?? []
-            const isProductsSection = item.id === 'products' && visibleChildren.length > 0
+            const isCollapsibleSection = visibleChildren.length > 0
+            const sectionOpen = openSections[item.id] ?? false
             const active =
               pathname === item.path ||
-              (isProductsSection && pathname.startsWith('/dashboard/products'))
+              (isCollapsibleSection && pathname.startsWith(item.path + '/'))
 
-            if (isProductsSection) {
+            if (isCollapsibleSection) {
               return (
                 <div key={item.path}>
                   <button
                     type="button"
-                    onClick={() => setProductsOpen((open) => !open)}
+                    onClick={() => setOpenSections((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
                     className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
                       active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10'
                     }`}
@@ -176,13 +182,13 @@ export function DashboardLayout({ children, title, role: roleProp }: DashboardLa
                     <Icon className="h-5 w-5 shrink-0" />
                     <span className="flex-1 text-left">{item.label}</span>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`}
+                      className={`h-4 w-4 transition-transform ${sectionOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
-                  {productsOpen && (
+                  {sectionOpen && (
                     <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-2">
                       {visibleChildren.map((child) => {
-                        const ChildIcon = CHILD_ICONS[child.path] ?? Package
+                        const ChildIcon = CHILD_ICONS[child.path] ?? (item.id === 'products' ? Package : FileText)
                         const childActive = pathname === child.path
                         return (
                           <Link

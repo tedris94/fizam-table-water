@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LogIn } from 'lucide-react'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { Logo } from '@/components/frontend/Logo'
 
 function LoginInner() {
@@ -12,7 +12,9 @@ function LoginInner() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
+  const [demoEnabled, setDemoEnabled] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
 
   // If a Payload session cookie is already valid, jump straight to the dashboard.
@@ -41,6 +43,24 @@ function LoginInner() {
       cancelled = true
     }
   }, [router, searchParams])
+
+  // Demo login card visibility is controlled from the dashboard (site settings).
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/globals/site-settings', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { showLoginDemoCard?: boolean } | null) => {
+        if (cancelled) return
+        // Default to visible unless explicitly disabled in site settings.
+        setDemoEnabled(data ? data.showLoginDemoCard !== false : false)
+      })
+      .catch(() => {
+        if (!cancelled) setDemoEnabled(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -132,16 +152,28 @@ function LoginInner() {
               <label htmlFor="password" className="block text-sm text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563eb] focus:outline-none transition-colors"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-[#2563eb] focus:outline-none transition-colors"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  tabIndex={-1}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-[#2563eb] transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -160,6 +192,7 @@ function LoginInner() {
             </a>
           </div>
 
+          {demoEnabled && (
           <div className="mt-6 pt-6 border-t border-gray-200">
             <button
               type="button"
@@ -240,6 +273,7 @@ function LoginInner() {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

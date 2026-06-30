@@ -72,7 +72,8 @@
     "sharp": "0.33.5",
     "sonner": "^2.0.3",
     "styled-jsx": "5.1.6",
-    "tailwind-merge": "^3.2.0"
+    "tailwind-merge": "^3.2.0",
+    "web-vitals": "^5.3.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",
@@ -82,7 +83,9 @@
     "@types/react-dom": "^19.0.2",
     "eslint": "^9.16.0",
     "eslint-config-next": "15.4.11",
+    "marked": "^18.0.5",
     "postcss": "^8.5.1",
+    "puppeteer-core": "^25.2.1",
     "tailwindcss": "^4.1.12",
     "tsx": "^4.21.0",
     "typescript": "^5.7.3"

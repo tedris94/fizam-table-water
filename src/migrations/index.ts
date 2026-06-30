@@ -6,6 +6,10 @@ import * as migration_20260622_applications_cv from './20260622_applications_cv'
 import * as migration_20260623_application_ref from './20260623_application_ref';
 import * as migration_20260624_email_templates from './20260624_email_templates';
 import * as migration_20260625_dashboard_roles from './20260625_dashboard_roles';
+import * as migration_20260629_223901_cms_page_builder from './20260629_223901_cms_page_builder';
+import * as migration_20260629_analytics_events from './20260629_analytics_events';
+import * as migration_20260629_audit_logs from './20260629_audit_logs';
+import * as migration_20260629_login_demo_card from './20260629_login_demo_card';
 
 export const migrations = [
   {
@@ -16,7 +20,7 @@ export const migrations = [
   {
     up: migration_20260518_232649_site_settings_seo_fields.up,
     down: migration_20260518_232649_site_settings_seo_fields.down,
-    name: '20260518_232649_site_settings_seo_fields'
+    name: '20260518_232649_site_settings_seo_fields',
   },
   {
     up: migration_20260619_products_category.up,
@@ -47,5 +51,25 @@ export const migrations = [
     up: migration_20260625_dashboard_roles.up,
     down: migration_20260625_dashboard_roles.down,
     name: '20260625_dashboard_roles',
+  },
+  {
+    up: migration_20260629_223901_cms_page_builder.up,
+    down: migration_20260629_223901_cms_page_builder.down,
+    name: '20260629_223901_cms_page_builder',
+  },
+  {
+    up: migration_20260629_analytics_events.up,
+    down: migration_20260629_analytics_events.down,
+    name: '20260629_analytics_events',
+  },
+  {
+    up: migration_20260629_audit_logs.up,
+    down: migration_20260629_audit_logs.down,
+    name: '20260629_audit_logs',
+  },
+  {
+    up: migration_20260629_login_demo_card.up,
+    down: migration_20260629_login_demo_card.down,
+    name: '20260629_login_demo_card'
   },
 ];

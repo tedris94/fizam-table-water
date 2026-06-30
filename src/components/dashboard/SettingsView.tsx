@@ -1,5 +1,8 @@
+import Link from 'next/link';
 import { DashboardLayout } from './DashboardLayout';
-import { Settings as SettingsIcon, User, Lock, Bell, Shield, Database } from 'lucide-react';
+import { Settings as SettingsIcon, User, Lock, Bell, Shield } from 'lucide-react';
+import { LoginDemoToggle } from './LoginDemoToggle';
+import { BackupDatabaseButton } from './BackupDatabaseButton';
 
 interface SettingsViewProps {
   role: string;
@@ -137,6 +140,9 @@ export function SettingsView({ role }: SettingsViewProps) {
             </div>
           </div>
 
+          {/* Login Page Settings (Super Admin Only) */}
+          {role === 'super_admin' && <LoginDemoToggle />}
+
           {/* System Settings (Super Admin Only) */}
           {role === 'super_admin' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -147,27 +153,27 @@ export function SettingsView({ role }: SettingsViewProps) {
                 <h3 className="text-xl text-[#1a1f71]">System Administration</h3>
               </div>
               <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Database className="w-5 h-5 text-gray-600" />
-                    <span className="text-[#1a1f71]">Backup Database</span>
-                  </div>
-                  <span className="text-sm text-gray-500">→</span>
-                </button>
-                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <BackupDatabaseButton />
+                <Link
+                  href="/dashboard/audit"
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <SettingsIcon className="w-5 h-5 text-gray-600" />
-                    <span className="text-[#1a1f71]">System Logs</span>
+                    <span className="text-[#1a1f71]">Audit Logs</span>
                   </div>
                   <span className="text-sm text-gray-500">→</span>
-                </button>
-                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                </Link>
+                <Link
+                  href="/dashboard/roles"
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <Shield className="w-5 h-5 text-gray-600" />
                     <span className="text-[#1a1f71]">User Permissions</span>
                   </div>
                   <span className="text-sm text-gray-500">→</span>
-                </button>
+                </Link>
               </div>
             </div>
           )}

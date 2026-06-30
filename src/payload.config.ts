@@ -21,8 +21,13 @@ import { Pages } from './collections/Pages'
 import { ShippingZones } from './collections/ShippingZones'
 import { EmailTemplates } from './collections/EmailTemplates'
 import { DashboardRoles } from './collections/DashboardRoles'
+import { AnalyticsEvents } from './collections/AnalyticsEvents'
+import { AuditLogs } from './collections/AuditLogs'
 import { SiteSettings } from './globals/SiteSettings'
 import { HomePage } from './globals/HomePage'
+import { Header } from './globals/Header'
+import { Footer } from './globals/Footer'
+import { withAudit, withGlobalAudit } from './lib/audit'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -100,22 +105,31 @@ export default buildConfig({
     },
   },
   collections: [
-    Users,
-    Media,
-    ProductCategories,
-    ProductSizes,
-    ProductTags,
-    Products,
-    Orders,
-    TeamMembers,
-    Jobs,
-    Applications,
-    Pages,
-    ShippingZones,
-    EmailTemplates,
-    DashboardRoles,
+    // Wrap data collections with the audit trail. AnalyticsEvents and AuditLogs
+    // are intentionally excluded to avoid recursive/noisy logging.
+    withAudit(Users),
+    withAudit(Media),
+    withAudit(ProductCategories),
+    withAudit(ProductSizes),
+    withAudit(ProductTags),
+    withAudit(Products),
+    withAudit(Orders),
+    withAudit(TeamMembers),
+    withAudit(Jobs),
+    withAudit(Applications),
+    withAudit(Pages),
+    withAudit(ShippingZones),
+    withAudit(EmailTemplates),
+    withAudit(DashboardRoles),
+    AnalyticsEvents,
+    AuditLogs,
   ],
-  globals: [SiteSettings, HomePage],
+  globals: [
+    withGlobalAudit(SiteSettings),
+    withGlobalAudit(HomePage),
+    withGlobalAudit(Header),
+    withGlobalAudit(Footer),
+  ],
   editor: lexicalEditor({}),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

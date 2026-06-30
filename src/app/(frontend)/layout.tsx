@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
+import { Suspense } from 'react'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import { PWARegister } from '@/components/PWARegister'
+import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { inter } from '@/lib/fonts'
 import { buildPageMetadata, DEFAULT_OG_IMAGE } from '@/lib/seo'
@@ -48,6 +50,9 @@ export default function FrontendLayout({ children }: { children: React.ReactNode
         <SiteJsonLd />
         <SiteChrome>{children}</SiteChrome>
         <PWARegister />
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
       </body>
     </html>
   )

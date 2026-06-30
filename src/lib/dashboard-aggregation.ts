@@ -21,6 +21,26 @@ export async function fetchDashboardAggregation(payload: Payload) {
   const pendingOrders = orders.filter((o) => o.status === 'pending').length
   const completedOrders = orders.filter((o) => o.status === 'delivered').length
   const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0)
+
+  // Real month-over-month revenue growth (current calendar month vs previous).
+  const now = new Date()
+  const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`
+  const currentKey = monthKey(now)
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const prevKey = monthKey(prevDate)
+  let currentMonthRevenue = 0
+  let prevMonthRevenue = 0
+  for (const o of orders) {
+    const key = monthKey(new Date(String(o.createdAt)))
+    if (key === currentKey) currentMonthRevenue += Number(o.total) || 0
+    else if (key === prevKey) prevMonthRevenue += Number(o.total) || 0
+  }
+  const monthlyGrowth =
+    prevMonthRevenue > 0
+      ? Math.round(((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 1000) / 10
+      : currentMonthRevenue > 0
+        ? 100
+        : 0
   const lowStockProducts = products.filter((p) => Number(p.stock) < 100).length
   const activeJobs = jobs.filter((j) => j.status === 'active').length
   const pendingApplications = applications.filter((a) => a.status === 'pending').length
@@ -52,7 +72,7 @@ export async function fetchDashboardAggregation(payload: Payload) {
       teamMembers: team.length,
       activeJobs,
       pendingApplications,
-      monthlyGrowth: 15,
+      monthlyGrowth,
     },
     recentOrders,
   }

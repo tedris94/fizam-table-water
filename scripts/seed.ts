@@ -4,6 +4,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { seedContentPages } from './seedContentPages'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -486,12 +487,208 @@ async function seed() {
   await payload.updateGlobal({
     slug: 'home-page',
     data: {
-      heroTitle: 'Pure hydration for every Nigerian home',
+      heroTitle: 'Fizam: Pure hydration for every Nigerian home',
       heroSubtitle:
         'Fizam delivers NAFDAC-certified drinking water from our factory to your door.',
       aboutHeading: 'About Fizam',
     },
   })
+
+  // ---- CMS-driven layout / chrome (only seeded when not already configured) ----
+  const homeLayout = [
+    {
+      blockType: 'hero',
+      badge: 'Refreshingly Pure',
+      title: 'Fizam: Pure hydration for every Nigerian home',
+      subtitle: 'Fizam delivers NAFDAC-certified drinking water from our factory to your door.',
+      primaryCta: { label: 'Order for Home', href: '/order' },
+      secondaryCta: { label: 'Call Us', href: 'tel:+2349166698406' },
+    },
+    {
+      blockType: 'imageText',
+      heading: 'About FIZAM',
+      body: 'NAFDAC-certified table water for Nigerian homes—our mission, facility, and how we serve you.',
+      cta: { label: 'About us — full story', href: '/about' },
+    },
+    {
+      blockType: 'products',
+      heading: 'Our Products',
+      subheading: 'Quality water in various sizes to meet all your hydration needs',
+      items: [
+        { name: 'Table Water', size: '35cl', description: 'Compact bottle for everyday hydration', icon: '💧' },
+        { name: 'Table Water', size: '50cl', description: 'Ideal for personal daily hydration', icon: '🚰' },
+        { name: 'Table Water', size: '75cl', description: 'Great for sharing and family use', icon: '💦' },
+        { name: 'Sachet Water', size: '50cl', description: 'Perfect for quick refreshment on the go', icon: '💧' },
+        { name: 'Dispenser', size: '19L', description: 'Perfect for office and home dispensers', icon: '🏢' },
+      ],
+      bannerHeading: 'All Products Are Quality Certified',
+      bannerBody:
+        'Every bottle of Fizam Table Water undergoes rigorous quality control processes to ensure you receive only the purest, safest water with great taste.',
+    },
+    {
+      blockType: 'quality',
+      badge: 'Quality Assurance',
+      heading: 'Ensuring Purity & Great Taste',
+      subheading: 'Our commitment to quality means every drop meets the highest standards',
+      certifications: [
+        { icon: 'flask', title: 'Laboratory Tested', description: 'Regular testing ensures consistent quality and purity' },
+        { icon: 'award', title: 'Industry Standards', description: 'Meets and exceeds all regulatory requirements' },
+        { icon: 'fileCheck', title: 'Quality Certified', description: 'Certified by relevant health and safety authorities' },
+        { icon: 'checkCircle', title: 'Safe & Pure', description: 'Multi-stage purification for your peace of mind' },
+      ],
+      processHeading: 'Our Quality Process',
+      steps: [
+        { value: 'Source selection from pristine water sources' },
+        { value: 'Multi-stage filtration and purification' },
+        { value: 'Rigorous laboratory testing' },
+        { value: 'Quality control at every production stage' },
+        { value: 'Hygienic packaging and sealing' },
+        { value: 'Regular safety and compliance audits' },
+      ],
+      guaranteeTitle: 'Quality Guaranteed',
+      guaranteeBody:
+        'Every bottle of Fizam Table Water comes with our quality assurance promise. We are committed to delivering pure, safe, and great-tasting water to every customer.',
+      statValue: '100%',
+      statLabel: 'Quality Certified',
+    },
+    {
+      blockType: 'salesChannels',
+      heading: 'How to Buy',
+      subheading: 'Multiple convenient ways to get your Fizam Table Water',
+      channels: [
+        {
+          icon: 'store',
+          title: 'Retail Sales',
+          description: 'Find us at major retail stores and supermarkets nationwide',
+          features: [{ value: 'Convenient locations' }, { value: 'Always available' }, { value: 'Multiple sizes' }],
+        },
+        {
+          icon: 'warehouse',
+          title: 'Wholesale',
+          description: 'Bulk purchasing options for businesses and distributors',
+          features: [{ value: 'Competitive pricing' }, { value: 'Large quantities' }, { value: 'Regular supply' }],
+        },
+        {
+          icon: 'factory',
+          title: 'Direct from Factory',
+          description: 'Purchase directly from our production facility',
+          features: [{ value: 'Best prices' }, { value: 'Fresh production' }, { value: 'Custom orders' }],
+        },
+        {
+          icon: 'truck',
+          title: 'Home Delivery',
+          description: 'Order online and get fresh water delivered to your doorstep',
+          features: [{ value: 'Convenient ordering' }, { value: 'Fast delivery' }, { value: 'Scheduled service' }],
+        },
+      ],
+      ctaHeading: 'Ready to Order?',
+      ctaBody:
+        "Contact us today to place your order or learn more about our distribution options. We're here to serve you with the best quality water.",
+      primaryCta: { label: 'Get it Delivered', href: '/order' },
+      secondaryCta: { label: 'Call Now', href: 'tel:+2349166698406' },
+    },
+    {
+      blockType: 'contact',
+      heading: 'Get in Touch',
+      subheading: "Have questions or ready to place an order? We'd love to hear from you",
+      phone: '+234 703 902 7061',
+      phoneHref: 'tel:+2347039027061',
+      address:
+        'House 3, Sir Eric Togbe Street, Gbazango Extension, Off Arab Road, Behind Diamond House, Kubwa, Abuja',
+      hours: 'Mon - Sat: 8:00 AM - 6:00 PM',
+      whyTitle: 'Why Order from Fizam?',
+      whyItems: [
+        { value: 'Quality certified products' },
+        { value: 'Competitive wholesale pricing' },
+        { value: 'Reliable delivery service' },
+        { value: 'Flexible order quantities' },
+        { value: 'Dedicated customer support' },
+        { value: 'Fresh production guaranteed' },
+      ],
+    },
+  ]
+
+  const headerData = {
+    brandName: 'FIZAM Table Water',
+    navLinks: [
+      { label: 'About', href: '/about' },
+      { label: 'Products', href: '#products' },
+      { label: 'Quality', href: '#quality' },
+      { label: 'Sales Channels', href: '#sales' },
+      { label: 'Team', href: '/team' },
+      { label: 'Careers', href: '/careers' },
+    ],
+    ctaLabel: 'Order Now',
+    ctaHref: '/order',
+    showLogin: true,
+  }
+
+  const footerData = {
+    about:
+      'Quality certified table water ensuring purity and great taste in every drop. Your trusted source for refreshingly pure water.',
+    columns: [
+      {
+        title: 'Our Products',
+        links: [
+          { label: 'Sachet Water (50cl)', href: '/#product-sachet-water-50cl' },
+          { label: 'Table Water (35cl)', href: '/#product-table-water-35cl' },
+          { label: 'Table Water (50cl)', href: '/#product-table-water-50cl' },
+          { label: 'Table Water (75cl)', href: '/#product-table-water-75cl' },
+          { label: 'Dispenser (19L)', href: '/#product-dispenser-19l' },
+        ],
+      },
+      {
+        title: 'How to Buy',
+        links: [
+          { label: 'Retail Stores', href: '#sales' },
+          { label: 'Wholesale Orders', href: '#sales' },
+          { label: 'Direct from Factory', href: '#sales' },
+          { label: 'Home Delivery', href: '#sales' },
+        ],
+      },
+    ],
+    contact: {
+      phones: [
+        { label: '09166698406', href: 'tel:+2349166698406' },
+        { label: '07039027061', href: 'tel:+2347039027061' },
+        { label: '09158293282', href: 'tel:+2349158293282' },
+        { label: '07039032093', href: 'tel:+2347039032093' },
+      ],
+      address:
+        'House 3, Sir Eric Togbe Street, Gbazango Extension, Off Arab Road, Behind Diamond House, Kubwa, Abuja',
+    },
+    socials: [
+      { platform: 'facebook', href: '#' },
+      { platform: 'instagram', href: '#' },
+      { platform: 'twitter', href: '#' },
+    ],
+    legalLinks: [
+      { label: 'About us', href: '/about' },
+      { label: 'Privacy Policy', href: '/privacy-policy' },
+      { label: 'Terms of Service', href: '/terms-of-service' },
+      { label: 'Quality Certifications', href: '/quality-certifications' },
+    ],
+  }
+
+  const homeGlobal = (await payload.findGlobal({ slug: 'home-page' })) as { layout?: unknown[] }
+  if (!Array.isArray(homeGlobal.layout) || homeGlobal.layout.length === 0) {
+    await payload.updateGlobal({ slug: 'home-page', data: { layout: homeLayout } as never })
+    console.log('Seeded home layout.')
+  }
+
+  const headerGlobal = (await payload.findGlobal({ slug: 'header' })) as { navLinks?: unknown[] }
+  if (!Array.isArray(headerGlobal.navLinks) || headerGlobal.navLinks.length === 0) {
+    await payload.updateGlobal({ slug: 'header', data: headerData as never })
+    console.log('Seeded header.')
+  }
+
+  const footerGlobal = (await payload.findGlobal({ slug: 'footer' })) as { columns?: unknown[] }
+  if (!Array.isArray(footerGlobal.columns) || footerGlobal.columns.length === 0) {
+    await payload.updateGlobal({ slug: 'footer', data: footerData as never })
+    console.log('Seeded footer.')
+  }
+
+  await seedContentPages(payload)
 
   console.log('Seed complete.')
   process.exit(0)

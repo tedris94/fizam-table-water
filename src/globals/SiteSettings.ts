@@ -14,6 +14,15 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: 'Fizam Table Water',
     },
     {
+      name: 'showLoginDemoCard',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Show demo login card',
+      admin: {
+        description: 'Controls whether the "Quick Demo Login" card is shown on the /login page.',
+      },
+    },
+    {
       name: 'logo',
       type: 'upload',
       relationTo: 'media',

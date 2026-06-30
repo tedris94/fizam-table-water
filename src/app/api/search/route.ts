@@ -15,11 +15,12 @@ export const runtime = 'nodejs'
 function mapCmsPage(page: {
   id: number | string
   title: string
-  slug: string
+  slug?: string | null
   metaDescription?: string | null
   metaTitle?: string | null
   body?: unknown
 }): SiteContentHit | null {
+  if (!page.slug) return null
   const href = page.slug === 'home' ? '/' : `/${page.slug}`
   return {
     id: `cms-page-${page.id}`,

@@ -7,6 +7,7 @@ import {
   OrderedListFeature,
   UnorderedListFeature,
 } from '@payloadcms/richtext-lexical'
+import { pageBlocks } from '../blocks'
 
 export const HomePage: GlobalConfig = {
   slug: 'home-page',
@@ -17,9 +18,18 @@ export const HomePage: GlobalConfig = {
   },
   fields: [
     {
+      name: 'layout',
+      type: 'blocks',
+      label: 'Home page sections',
+      blocks: pageBlocks,
+      admin: {
+        description: 'The home page is built from these sections. Leave empty to use legacy fields below.',
+      },
+    },
+    {
       name: 'heroTitle',
       type: 'text',
-      defaultValue: 'Pure hydration for every Nigerian home',
+      defaultValue: 'Fizam: Pure hydration for every Nigerian home',
     },
     {
       name: 'heroSubtitle',

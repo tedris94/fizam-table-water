@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { DashboardLayout } from './DashboardLayout'
 import {
-  TrendingUp,
   Package,
   ShoppingCart,
   Users,
@@ -53,34 +52,37 @@ export function SuperAdminDashboard() {
     void fetchDashboardData()
   }, [])
 
+  const growthLabel =
+    stats.monthlyGrowth >= 0 ? `+${stats.monthlyGrowth}% this month` : `${stats.monthlyGrowth}% this month`
+
   const statCards = [
     {
       title: 'Total Orders',
       value: stats.totalOrders,
       icon: ShoppingCart,
       color: 'from-blue-500 to-blue-600',
-      change: '+12%',
+      change: `${stats.totalOrders} total`,
     },
     {
       title: 'Revenue',
       value: `₦${stats.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'from-green-500 to-green-600',
-      change: '+8%',
+      change: growthLabel,
     },
     {
       title: 'Products',
       value: stats.totalProducts,
       icon: Package,
       color: 'from-purple-500 to-purple-600',
-      change: '0%',
+      change: `${stats.totalProducts} in catalog`,
     },
     {
       title: 'Team Members',
       value: stats.teamMembers,
       icon: Users,
       color: 'from-orange-500 to-orange-600',
-      change: '+2',
+      change: `${stats.teamMembers} active`,
     },
     {
       title: 'Active Jobs',

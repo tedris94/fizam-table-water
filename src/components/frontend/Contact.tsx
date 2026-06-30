@@ -5,7 +5,39 @@ import { useState } from 'react';
 import { ObfuscatedEmail } from '@/components/frontend/ObfuscatedEmail';
 import { ENCODED_EMAILS } from '@/lib/obfuscateEmail';
 
-export function Contact() {
+type ContactProps = {
+  heading?: string | null
+  subheading?: string | null
+  phone?: string | null
+  phoneHref?: string | null
+  email?: string | null
+  address?: string | null
+  hours?: string | null
+  whyTitle?: string | null
+  whyItems?: { value: string }[] | null
+}
+
+const DEFAULT_WHY: { value: string }[] = [
+  { value: 'Quality certified products' },
+  { value: 'Competitive wholesale pricing' },
+  { value: 'Reliable delivery service' },
+  { value: 'Flexible order quantities' },
+  { value: 'Dedicated customer support' },
+  { value: 'Fresh production guaranteed' },
+]
+
+export function Contact({
+  heading = 'Get in Touch',
+  subheading = "Have questions or ready to place an order? We'd love to hear from you",
+  phone = '+234 703 902 7061',
+  phoneHref = 'tel:+2347039027061',
+  email,
+  address = 'House 3, Sir Eric Togbe Street, Gbazango Extension, Off Arab Road, Behind Diamond House, Kubwa, Abuja',
+  hours = 'Mon - Sat: 8:00 AM - 6:00 PM',
+  whyTitle = 'Why Order from Fizam?',
+  whyItems,
+}: ContactProps = {}) {
+  const whyList = whyItems && whyItems.length > 0 ? whyItems : DEFAULT_WHY
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -56,10 +88,10 @@ export function Contact() {
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl text-[#1a1f71] mb-4">
-            Get in Touch
+            {heading}
           </h2>
           <p className="text-lg text-gray-600 max-w-xl mx-auto">
-            Have questions or ready to place an order? We&apos;d love to hear from you
+            {subheading}
           </p>
         </div>
 
@@ -77,8 +109,8 @@ export function Contact() {
                   </div>
                   <div>
                     <div className="text-gray-600 text-sm mb-1">Phone</div>
-                    <a href="tel:+2347039027061" className="text-lg text-[#1a1f71] hover:text-[#2563eb]">
-                      +234 703 902 7061
+                    <a href={phoneHref ?? undefined} className="text-lg text-[#1a1f71] hover:text-[#2563eb]">
+                      {phone}
                     </a>
                   </div>
                 </div>
@@ -89,10 +121,16 @@ export function Contact() {
                   </div>
                   <div>
                     <div className="text-gray-600 text-sm mb-1">Email</div>
-                    <ObfuscatedEmail
-                      encoded={ENCODED_EMAILS.infoFizamNg}
-                      className="text-lg text-[#1a1f71] hover:text-[#2563eb]"
-                    />
+                    {email ? (
+                      <a href={`mailto:${email}`} className="text-lg text-[#1a1f71] hover:text-[#2563eb]">
+                        {email}
+                      </a>
+                    ) : (
+                      <ObfuscatedEmail
+                        encoded={ENCODED_EMAILS.infoFizamNg}
+                        className="text-lg text-[#1a1f71] hover:text-[#2563eb]"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -103,7 +141,7 @@ export function Contact() {
                   <div>
                     <div className="text-gray-600 text-sm mb-1">Factory Location</div>
                     <p className="text-lg text-[#1a1f71]">
-                    House 3, Sir Eric Togbe Street, Gbazango Extension, Off Arab Road, Behind Diamond House, Kubwa, Abuja
+                    {address}
                     </p>
                   </div>
                 </div>
@@ -115,7 +153,7 @@ export function Contact() {
                   <div>
                     <div className="text-gray-600 text-sm mb-1">Business Hours</div>
                     <p className="text-lg text-[#1a1f71]">
-                      Mon - Sat: 8:00 AM - 6:00 PM
+                      {hours}
                     </p>
                   </div>
                 </div>
@@ -124,20 +162,13 @@ export function Contact() {
 
             <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border-2 border-blue-100">
               <h4 className="text-lg text-[#1a1f71] mb-3">
-                Why Order from Fizam?
+                {whyTitle}
               </h4>
               <ul className="space-y-2">
-                {[
-                  'Quality certified products',
-                  'Competitive wholesale pricing',
-                  'Reliable delivery service',
-                  'Flexible order quantities',
-                  'Dedicated customer support',
-                  'Fresh production guaranteed'
-                ].map((item, index) => (
+                {whyList.map((item, index) => (
                   <li key={index} className="flex items-center gap-2 text-gray-700">
                     <div className="w-2 h-2 bg-[#2563eb] rounded-full"></div>
-                    {item}
+                    {item.value}
                   </li>
                 ))}
               </ul>

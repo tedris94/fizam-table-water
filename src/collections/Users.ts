@@ -1,4 +1,5 @@
 import type { CollectionConfig, FieldAccess } from 'payload'
+import { recordAuthEvent } from '@/lib/audit'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -12,6 +13,18 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'fullName', 'role'],
+  },
+  hooks: {
+    afterLogin: [
+      async ({ req, user }) => {
+        await recordAuthEvent(req, 'login', user as { id?: unknown; email?: string; role?: string })
+      },
+    ],
+    afterLogout: [
+      async ({ req }) => {
+        await recordAuthEvent(req, 'logout', req.user as { id?: unknown; email?: string; role?: string } | null)
+      },
+    ],
   },
   fields: [
     {

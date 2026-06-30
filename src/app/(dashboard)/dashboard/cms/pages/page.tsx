@@ -8,7 +8,7 @@ export default function CmsPagesPage() {
   const { user } = useAuth()
 
   return (
-    <DashboardPageGuard capability="cms.view">
+    <DashboardPageGuard capability="cms.pages.view">
       <PagesManagementView role={user?.role ?? 'user'} />
     </DashboardPageGuard>
   )

@@ -81,6 +81,8 @@ export interface Config {
     'shipping-zones': ShippingZone;
     'email-templates': EmailTemplate;
     'dashboard-roles': DashboardRole;
+    'analytics-events': AnalyticsEvent;
+    'audit-logs': AuditLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -102,6 +104,8 @@ export interface Config {
     'shipping-zones': ShippingZonesSelect<false> | ShippingZonesSelect<true>;
     'email-templates': EmailTemplatesSelect<false> | EmailTemplatesSelect<true>;
     'dashboard-roles': DashboardRolesSelect<false> | DashboardRolesSelect<true>;
+    'analytics-events': AnalyticsEventsSelect<false> | AnalyticsEventsSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -114,10 +118,14 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     'home-page': HomePage;
+    header: Header;
+    footer: Footer;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
+    header: HeaderSelect<false> | HeaderSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
   };
   locale: null;
   widgets: {
@@ -493,9 +501,30 @@ export interface Page {
   id: number;
   title: string;
   /**
-   * URL segment (e.g. about-us)
+   * URL segment (e.g. about-us). Leave blank to auto-generate from the title.
    */
-  slug: string;
+  slug?: string | null;
+  status?: ('draft' | 'published') | null;
+  /**
+   * Build the page from reusable sections.
+   */
+  layout?:
+    | (
+        | PageHeaderBlock
+        | HeroBlock
+        | ImageTextBlock
+        | ProductsBlock
+        | QualityBlock
+        | SalesChannelsBlock
+        | ContactBlock
+        | FeatureGridBlock
+        | CtaBannerBlock
+        | RichTextBlock
+      )[]
+    | null;
+  /**
+   * Legacy rich-text body (used only when no sections are added).
+   */
   body?: {
     root: {
       type: string;
@@ -513,8 +542,373 @@ export interface Page {
   } | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /**
+   * Comma-separated SEO keywords (optional). Falls back to site defaults.
+   */
+  keywords?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PageHeaderBlock".
+ */
+export interface PageHeaderBlock {
+  icon?:
+    | (
+        | 'droplets'
+        | 'flask'
+        | 'award'
+        | 'fileCheck'
+        | 'checkCircle'
+        | 'shield'
+        | 'sparkles'
+        | 'store'
+        | 'warehouse'
+        | 'factory'
+        | 'truck'
+        | 'phone'
+        | 'mail'
+        | 'mapPin'
+        | 'clock'
+        | 'star'
+        | 'heart'
+        | 'package'
+        | 'users'
+        | 'leaf'
+        | 'zap'
+        | 'globe'
+      )
+    | null;
+  title: string;
+  /**
+   * Lead text, or a line like "Last updated: …"
+   */
+  subtitle?: string | null;
+  align?: ('center' | 'left') | null;
+  /**
+   * Show a "Home / <title>" breadcrumb (left-aligned headers).
+   */
+  showBreadcrumb?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pageHeader';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  /**
+   * Small pill above the title
+   */
+  badge?: string | null;
+  title: string;
+  subtitle?: string | null;
+  image?: (number | null) | Media;
+  primaryCta?: {
+    label?: string | null;
+    /**
+     * e.g. /order or https://…
+     */
+    href?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    /**
+     * e.g. /order or https://…
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock".
+ */
+export interface ImageTextBlock {
+  heading?: string | null;
+  body?: string | null;
+  image?: (number | null) | Media;
+  imagePosition?: ('right' | 'left') | null;
+  cta?: {
+    label?: string | null;
+    /**
+     * e.g. /order or https://…
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductsBlock".
+ */
+export interface ProductsBlock {
+  heading?: string | null;
+  subheading?: string | null;
+  items?:
+    | {
+        name: string;
+        size?: string | null;
+        description?: string | null;
+        /**
+         * Emoji or short label, e.g. 💧
+         */
+        icon?: string | null;
+        href?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  bannerHeading?: string | null;
+  bannerBody?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'products';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QualityBlock".
+ */
+export interface QualityBlock {
+  badge?: string | null;
+  heading?: string | null;
+  subheading?: string | null;
+  certifications?:
+    | {
+        icon?:
+          | (
+              | 'droplets'
+              | 'flask'
+              | 'award'
+              | 'fileCheck'
+              | 'checkCircle'
+              | 'shield'
+              | 'sparkles'
+              | 'store'
+              | 'warehouse'
+              | 'factory'
+              | 'truck'
+              | 'phone'
+              | 'mail'
+              | 'mapPin'
+              | 'clock'
+              | 'star'
+              | 'heart'
+              | 'package'
+              | 'users'
+              | 'leaf'
+              | 'zap'
+              | 'globe'
+            )
+          | null;
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  processHeading?: string | null;
+  steps?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  guaranteeTitle?: string | null;
+  guaranteeBody?: string | null;
+  /**
+   * e.g. 100%
+   */
+  statValue?: string | null;
+  statLabel?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'quality';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SalesChannelsBlock".
+ */
+export interface SalesChannelsBlock {
+  heading?: string | null;
+  subheading?: string | null;
+  channels?:
+    | {
+        icon?:
+          | (
+              | 'droplets'
+              | 'flask'
+              | 'award'
+              | 'fileCheck'
+              | 'checkCircle'
+              | 'shield'
+              | 'sparkles'
+              | 'store'
+              | 'warehouse'
+              | 'factory'
+              | 'truck'
+              | 'phone'
+              | 'mail'
+              | 'mapPin'
+              | 'clock'
+              | 'star'
+              | 'heart'
+              | 'package'
+              | 'users'
+              | 'leaf'
+              | 'zap'
+              | 'globe'
+            )
+          | null;
+        title: string;
+        description?: string | null;
+        features?:
+          | {
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  ctaHeading?: string | null;
+  ctaBody?: string | null;
+  primaryCta?: {
+    label?: string | null;
+    /**
+     * e.g. /order or https://…
+     */
+    href?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    /**
+     * e.g. /order or https://…
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'salesChannels';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock".
+ */
+export interface ContactBlock {
+  heading?: string | null;
+  subheading?: string | null;
+  phone?: string | null;
+  /**
+   * e.g. tel:+234…
+   */
+  phoneHref?: string | null;
+  email?: string | null;
+  address?: string | null;
+  hours?: string | null;
+  whyTitle?: string | null;
+  whyItems?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contact';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock".
+ */
+export interface FeatureGridBlock {
+  heading?: string | null;
+  subheading?: string | null;
+  columns?: ('2' | '3' | '4') | null;
+  features?:
+    | {
+        icon?:
+          | (
+              | 'droplets'
+              | 'flask'
+              | 'award'
+              | 'fileCheck'
+              | 'checkCircle'
+              | 'shield'
+              | 'sparkles'
+              | 'store'
+              | 'warehouse'
+              | 'factory'
+              | 'truck'
+              | 'phone'
+              | 'mail'
+              | 'mapPin'
+              | 'clock'
+              | 'star'
+              | 'heart'
+              | 'package'
+              | 'users'
+              | 'leaf'
+              | 'zap'
+              | 'globe'
+            )
+          | null;
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'featureGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBannerBlock".
+ */
+export interface CtaBannerBlock {
+  heading?: string | null;
+  body?: string | null;
+  buttons?:
+    | {
+        label: string;
+        href?: string | null;
+        style?: ('primary' | 'outline') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ctaBanner';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock".
+ */
+export interface RichTextBlock {
+  variant?: ('prose' | 'card') | null;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'richText';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -595,12 +989,24 @@ export interface DashboardRole {
           | 'applications.delete'
           | 'organogram.view'
           | 'cms.view'
+          | 'cms.pages.view'
+          | 'cms.pages.create'
+          | 'cms.pages.edit'
+          | 'cms.pages.delete'
+          | 'cms.pages.publish'
+          | 'cms.home.manage'
+          | 'cms.media.manage'
+          | 'cms.seo.manage'
+          | 'cms.header.manage'
+          | 'cms.footer.manage'
           | 'settings.view'
           | 'email.templates'
           | 'email.templates.all'
+          | 'audit.view'
           | 'diagnostics.view'
           | 'users.manage'
-          | 'roles.manage';
+          | 'roles.manage'
+          | 'system.backup';
         id?: string | null;
       }[]
     | null;
@@ -608,6 +1014,73 @@ export interface DashboardRole {
    * System roles cannot be deleted from the dashboard.
    */
   isSystem?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-events".
+ */
+export interface AnalyticsEvent {
+  id: number;
+  type: 'pageview' | 'click' | 'resource_served' | 'web_vital';
+  path?: string | null;
+  referrer?: string | null;
+  sessionId?: string | null;
+  visitorId?: string | null;
+  userId?: number | null;
+  userEmail?: string | null;
+  /**
+   * Clicked resource label or href.
+   */
+  target?: string | null;
+  /**
+   * e.g. product, page, outbound, download, cta.
+   */
+  resourceType?: string | null;
+  /**
+   * Web Vital name (LCP, CLS, INP, FCP, TTFB).
+   */
+  metricName?: string | null;
+  metricValue?: number | null;
+  /**
+   * good | needs-improvement | poor
+   */
+  rating?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: number;
+  action: 'create' | 'update' | 'delete' | 'login' | 'logout';
+  collectionSlug?: string | null;
+  documentId?: string | null;
+  /**
+   * Human-readable label of the affected document.
+   */
+  title?: string | null;
+  userId?: number | null;
+  userEmail?: string | null;
+  userRole?: string | null;
+  /**
+   * Changed fields (before/after) for updates, or the document snapshot.
+   */
+  changes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  ip?: string | null;
+  userAgent?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -690,6 +1163,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'dashboard-roles';
         value: number | DashboardRole;
+      } | null)
+    | ({
+        relationTo: 'analytics-events';
+        value: number | AnalyticsEvent;
+      } | null)
+    | ({
+        relationTo: 'audit-logs';
+        value: number | AuditLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -955,11 +1436,241 @@ export interface ApplicationsSelect<T extends boolean = true> {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  status?: T;
+  layout?:
+    | T
+    | {
+        pageHeader?: T | PageHeaderBlockSelect<T>;
+        hero?: T | HeroBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        products?: T | ProductsBlockSelect<T>;
+        quality?: T | QualityBlockSelect<T>;
+        salesChannels?: T | SalesChannelsBlockSelect<T>;
+        contact?: T | ContactBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        ctaBanner?: T | CtaBannerBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+      };
   body?: T;
   metaTitle?: T;
   metaDescription?: T;
+  keywords?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PageHeaderBlock_select".
+ */
+export interface PageHeaderBlockSelect<T extends boolean = true> {
+  icon?: T;
+  title?: T;
+  subtitle?: T;
+  align?: T;
+  showBreadcrumb?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  badge?: T;
+  title?: T;
+  subtitle?: T;
+  image?: T;
+  primaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  secondaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock_select".
+ */
+export interface ImageTextBlockSelect<T extends boolean = true> {
+  heading?: T;
+  body?: T;
+  image?: T;
+  imagePosition?: T;
+  cta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductsBlock_select".
+ */
+export interface ProductsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  items?:
+    | T
+    | {
+        name?: T;
+        size?: T;
+        description?: T;
+        icon?: T;
+        href?: T;
+        id?: T;
+      };
+  bannerHeading?: T;
+  bannerBody?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QualityBlock_select".
+ */
+export interface QualityBlockSelect<T extends boolean = true> {
+  badge?: T;
+  heading?: T;
+  subheading?: T;
+  certifications?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  processHeading?: T;
+  steps?:
+    | T
+    | {
+        value?: T;
+        id?: T;
+      };
+  guaranteeTitle?: T;
+  guaranteeBody?: T;
+  statValue?: T;
+  statLabel?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SalesChannelsBlock_select".
+ */
+export interface SalesChannelsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  channels?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        features?:
+          | T
+          | {
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  ctaHeading?: T;
+  ctaBody?: T;
+  primaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  secondaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock_select".
+ */
+export interface ContactBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  phone?: T;
+  phoneHref?: T;
+  email?: T;
+  address?: T;
+  hours?: T;
+  whyTitle?: T;
+  whyItems?:
+    | T
+    | {
+        value?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock_select".
+ */
+export interface FeatureGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  columns?: T;
+  features?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBannerBlock_select".
+ */
+export interface CtaBannerBlockSelect<T extends boolean = true> {
+  heading?: T;
+  body?: T;
+  buttons?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        style?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock_select".
+ */
+export interface RichTextBlockSelect<T extends boolean = true> {
+  variant?: T;
+  content?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1030,6 +1741,45 @@ export interface DashboardRolesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-events_select".
+ */
+export interface AnalyticsEventsSelect<T extends boolean = true> {
+  type?: T;
+  path?: T;
+  referrer?: T;
+  sessionId?: T;
+  visitorId?: T;
+  userId?: T;
+  userEmail?: T;
+  target?: T;
+  resourceType?: T;
+  metricName?: T;
+  metricValue?: T;
+  rating?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  action?: T;
+  collectionSlug?: T;
+  documentId?: T;
+  title?: T;
+  userId?: T;
+  userEmail?: T;
+  userRole?: T;
+  changes?: T;
+  ip?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1075,6 +1825,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface SiteSetting {
   id: number;
   siteName?: string | null;
+  /**
+   * Controls whether the "Quick Demo Login" card is shown on the /login page.
+   */
+  showLoginDemoCard?: boolean | null;
   logo?: (number | null) | Media;
   contactEmail?: string | null;
   contactPhone?: string | null;
@@ -1105,6 +1859,23 @@ export interface SiteSetting {
  */
 export interface HomePage {
   id: number;
+  /**
+   * The home page is built from these sections. Leave empty to use legacy fields below.
+   */
+  layout?:
+    | (
+        | PageHeaderBlock
+        | HeroBlock
+        | ImageTextBlock
+        | ProductsBlock
+        | QualityBlock
+        | SalesChannelsBlock
+        | ContactBlock
+        | FeatureGridBlock
+        | CtaBannerBlock
+        | RichTextBlock
+      )[]
+    | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
   heroImage?: (number | null) | Media;
@@ -1129,10 +1900,89 @@ export interface HomePage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header".
+ */
+export interface Header {
+  id: number;
+  /**
+   * Text shown next to the logo.
+   */
+  brandName?: string | null;
+  navLinks?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional highlighted button (e.g. Order now).
+   */
+  ctaLabel?: string | null;
+  ctaHref?: string | null;
+  showLogin?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  about?: string | null;
+  columns?:
+    | {
+        title: string;
+        links?:
+          | {
+              label: string;
+              href: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  contact?: {
+    phones?:
+      | {
+          label: string;
+          href?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    email?: string | null;
+    address?: string | null;
+  };
+  socials?:
+    | {
+        platform: 'facebook' | 'instagram' | 'twitter';
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  legalLinks?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Defaults to "© {year} Fizam Table Water. All rights reserved."
+   */
+  copyright?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
+  showLoginDemoCard?: T;
   logo?: T;
   contactEmail?: T;
   contactPhone?: T;
@@ -1154,11 +2004,96 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "home-page_select".
  */
 export interface HomePageSelect<T extends boolean = true> {
+  layout?:
+    | T
+    | {
+        pageHeader?: T | PageHeaderBlockSelect<T>;
+        hero?: T | HeroBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        products?: T | ProductsBlockSelect<T>;
+        quality?: T | QualityBlockSelect<T>;
+        salesChannels?: T | SalesChannelsBlockSelect<T>;
+        contact?: T | ContactBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        ctaBanner?: T | CtaBannerBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+      };
   heroTitle?: T;
   heroSubtitle?: T;
   heroImage?: T;
   aboutHeading?: T;
   aboutBody?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header_select".
+ */
+export interface HeaderSelect<T extends boolean = true> {
+  brandName?: T;
+  navLinks?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  ctaLabel?: T;
+  ctaHref?: T;
+  showLogin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  about?: T;
+  columns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  contact?:
+    | T
+    | {
+        phones?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+        email?: T;
+        address?: T;
+      };
+  socials?:
+    | T
+    | {
+        platform?: T;
+        href?: T;
+        id?: T;
+      };
+  legalLinks?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  copyright?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

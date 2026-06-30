@@ -1,43 +1,42 @@
 'use client'
 
-import { Phone, ShoppingCart, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { ReactNode } from 'react'
+import { Phone, ShoppingCart } from 'lucide-react'
 import Image from 'next/image'
-import { Logo } from '@/components/frontend/Logo'
 import { SiteSearch } from '@/components/frontend/SiteSearch'
-import { useAuth } from '@/contexts/AuthContext'
 
 const DEFAULT_HERO_IMAGE = '/images/hero.png'
 
+type Cta = { label?: string | null; href?: string | null } | null | undefined
+
 type HeroProps = {
+  badge?: string | null
   heroTitle?: string | null
   heroSubtitle?: string | null
   heroImageUrl?: string | null
+  primaryCta?: Cta
+  secondaryCta?: Cta
+  /** Optional header (navigation) rendered transparently over the hero gradient. */
+  header?: ReactNode
+  /** Show the search box (used on the home page). */
+  showSearch?: boolean
 }
 
 export function Hero({
+  badge = 'Refreshingly Pure',
   heroTitle = 'Premium Quality Water',
   heroSubtitle = 'Experience the purity and great taste of Fizam Table Water. Quality certified products for your health and refreshment.',
   heroImageUrl,
+  primaryCta,
+  secondaryCta,
+  header,
+  showSearch = false,
 }: HeroProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, loading } = useAuth()
-  const isLoggedIn = Boolean(user)
   const imgSrc = heroImageUrl || DEFAULT_HERO_IMAGE
-
-  const smoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
-    if (targetId.startsWith('#')) {
-      e.preventDefault()
-      const element = document.querySelector(targetId)
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-        setMobileMenuOpen(false)
-      }
-    }
-  }
+  const primaryLabel = primaryCta?.label || 'Order for Home'
+  const primaryHref = primaryCta?.href || '/order'
+  const secondaryLabel = secondaryCta?.label || 'Call Us'
+  const secondaryHref = secondaryCta?.href || 'tel:+2349166698406'
 
   return (
     <div className="relative bg-gradient-to-br from-[#1a1f71] via-[#2563eb] to-[#0ea5e9] text-white overflow-hidden">
@@ -46,122 +45,40 @@ export function Hero({
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
       </div>
 
-      <nav className="relative z-10 container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3" aria-label="Fizam Table Water — Home">
-            <Logo variant="light" className="h-12 md:h-16 w-auto" priority />
-            <span className="text-xl md:text-2xl font-medium tracking-tight">
-              FIZAM Table Water
-            </span>
-          </a>
+      {header}
 
-          <div className="hidden md:flex items-center gap-8">
-            <a href="/about" className="hover:text-blue-200 transition-colors">
-              About
-            </a>
-            <a href="#products" onClick={(e) => smoothScroll(e, '#products')} className="hover:text-blue-200 transition-colors">
-              Products
-            </a>
-            <a href="#quality" onClick={(e) => smoothScroll(e, '#quality')} className="hover:text-blue-200 transition-colors">
-              Quality
-            </a>
-            <a href="#sales" onClick={(e) => smoothScroll(e, '#sales')} className="hover:text-blue-200 transition-colors">
-              Sales Channels
-            </a>
-            <a href="/team" className="hover:text-blue-200 transition-colors">
-              Team
-            </a>
-            <a href="/careers" className="hover:text-blue-200 transition-colors">
-              Careers
-            </a>
-            <a href="/order" className="bg-white text-[#1a1f71] px-6 py-2 rounded-full hover:bg-blue-50 transition-colors">
-              Order Now
-            </a>
-            {!loading && isLoggedIn ? (
-              <a href="/dashboard" className="hover:text-blue-200 transition-colors">
-                Dashboard
-              </a>
-            ) : (
-              <a href="/login" className="hover:text-blue-200 transition-colors">
-                Login
-              </a>
-            )}
+      {showSearch && (
+        <div className="relative z-10 container mx-auto px-4 pb-4">
+          <div className="mx-auto max-w-xl">
+            <SiteSearch placeholder="Search products and pages…" />
           </div>
-
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2">
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 space-y-4">
-            <a href="/about" className="block hover:text-blue-200 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              About
-            </a>
-            <a href="#products" onClick={(e) => smoothScroll(e, '#products')} className="block hover:text-blue-200 transition-colors">
-              Products
-            </a>
-            <a href="#quality" onClick={(e) => smoothScroll(e, '#quality')} className="block hover:text-blue-200 transition-colors">
-              Quality
-            </a>
-            <a href="#sales" onClick={(e) => smoothScroll(e, '#sales')} className="block hover:text-blue-200 transition-colors">
-              Sales Channels
-            </a>
-            <a href="/team" className="block hover:text-blue-200 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              Team
-            </a>
-            <a href="/careers" className="block hover:text-blue-200 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              Careers
-            </a>
-            <a
-              href="/order"
-              className="block bg-white text-[#1a1f71] px-6 py-2 rounded-full hover:bg-blue-50 transition-colors text-center"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Order Now
-            </a>
-            {!loading && isLoggedIn ? (
-              <a
-                href="/dashboard"
-                className="block hover:text-blue-200 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </a>
-            ) : (
-              <a href="/login" className="block hover:text-blue-200 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Login
-              </a>
-            )}
-          </div>
-        )}
-      </nav>
-
-      <div className="relative z-10 container mx-auto px-4 pb-4">
-        <div className="mx-auto max-w-xl">
-          <SiteSearch placeholder="Search products and pages…" />
-        </div>
-      </div>
+      )}
 
       <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-              <span className="text-sm">Refreshingly Pure</span>
-            </div>
+            {badge && (
+              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
+                <span className="text-sm">{badge}</span>
+              </div>
+            )}
             <h1 className="text-5xl md:text-7xl mb-6">{heroTitle}</h1>
             <p className="text-xl mb-8 text-blue-100">{heroSubtitle}</p>
             <div className="flex flex-wrap gap-4">
-              <a href="/order" className="bg-white text-[#1a1f71] px-8 py-4 rounded-full hover:bg-blue-50 transition-colors flex items-center gap-2">
+              <a
+                href={primaryHref}
+                className="bg-white text-[#1a1f71] px-8 py-4 rounded-full hover:bg-blue-50 transition-colors flex items-center gap-2"
+              >
                 <ShoppingCart className="w-5 h-5" />
-                Order for Home
+                {primaryLabel}
               </a>
               <a
-                href="tel:+2349166698406"
+                href={secondaryHref}
                 className="bg-transparent border-2 border-white px-8 py-4 rounded-full hover:bg-white/10 transition-colors flex items-center gap-2"
               >
                 <Phone className="w-5 h-5" />
-                Call Us
+                {secondaryLabel}
               </a>
             </div>
           </div>

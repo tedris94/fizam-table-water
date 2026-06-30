@@ -8,7 +8,7 @@ export default function CmsSeoPage() {
   const { user } = useAuth()
 
   return (
-    <DashboardPageGuard capability="cms.view">
+    <DashboardPageGuard capability="cms.seo.manage">
       <SEOSettingsView role={user?.role ?? 'user'} />
     </DashboardPageGuard>
   )

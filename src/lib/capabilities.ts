@@ -23,12 +23,24 @@ export const ALL_CAPABILITIES = [
   { key: 'applications.delete', label: 'Delete applications', group: 'People' },
   { key: 'organogram.view', label: 'Organogram', group: 'People' },
   { key: 'cms.view', label: 'CMS', group: 'Content' },
+  { key: 'cms.pages.view', label: 'View pages', group: 'Content' },
+  { key: 'cms.pages.create', label: 'Create pages', group: 'Content' },
+  { key: 'cms.pages.edit', label: 'Edit pages', group: 'Content' },
+  { key: 'cms.pages.delete', label: 'Delete pages', group: 'Content' },
+  { key: 'cms.pages.publish', label: 'Publish pages', group: 'Content' },
+  { key: 'cms.home.manage', label: 'Manage home page', group: 'Content' },
+  { key: 'cms.media.manage', label: 'Manage media library', group: 'Content' },
+  { key: 'cms.seo.manage', label: 'Manage SEO settings', group: 'Content' },
+  { key: 'cms.header.manage', label: 'Manage site header', group: 'Content' },
+  { key: 'cms.footer.manage', label: 'Manage site footer', group: 'Content' },
   { key: 'settings.view', label: 'Account settings', group: 'Settings' },
   { key: 'email.templates', label: 'Email templates', group: 'Settings' },
   { key: 'email.templates.all', label: 'Edit all email templates', group: 'Settings' },
+  { key: 'audit.view', label: 'Audit trail', group: 'System' },
   { key: 'diagnostics.view', label: 'System diagnostics', group: 'System' },
   { key: 'users.manage', label: 'Manage users', group: 'System' },
   { key: 'roles.manage', label: 'Manage roles & capabilities', group: 'System' },
+  { key: 'system.backup', label: 'Back up database', group: 'System' },
 ] as const satisfies readonly CapabilityDef[]
 
 export type CapabilityKey = (typeof ALL_CAPABILITIES)[number]['key']
@@ -90,7 +102,28 @@ export const DASHBOARD_MENU: DashboardMenuItem[] = [
     capabilities: ['applications.manage'],
   },
   { id: 'organogram', label: 'Organogram', path: '/dashboard/organogram', capabilities: ['organogram.view'] },
-  { id: 'cms', label: 'CMS', path: '/dashboard/cms', capabilities: ['cms.view'] },
+  {
+    id: 'cms',
+    label: 'CMS',
+    path: '/dashboard/cms',
+    capabilities: [
+      'cms.view',
+      'cms.pages.view',
+      'cms.media.manage',
+      'cms.seo.manage',
+      'cms.header.manage',
+      'cms.footer.manage',
+      'cms.home.manage',
+    ],
+    children: [
+      { label: 'Overview', path: '/dashboard/cms', capability: 'cms.view' },
+      { label: 'Pages', path: '/dashboard/cms/pages', capability: 'cms.pages.view' },
+      { label: 'Media Library', path: '/dashboard/cms/media', capability: 'cms.media.manage' },
+      { label: 'SEO Settings', path: '/dashboard/cms/seo', capability: 'cms.seo.manage' },
+      { label: 'Header', path: '/dashboard/cms/header', capability: 'cms.header.manage' },
+      { label: 'Footer', path: '/dashboard/cms/footer', capability: 'cms.footer.manage' },
+    ],
+  },
   { id: 'settings', label: 'Settings', path: '/dashboard/settings', capabilities: ['settings.view'] },
   {
     id: 'email-templates',
@@ -100,6 +133,7 @@ export const DASHBOARD_MENU: DashboardMenuItem[] = [
   },
   { id: 'users', label: 'Users', path: '/dashboard/users', capabilities: ['users.manage'] },
   { id: 'roles', label: 'Roles', path: '/dashboard/roles', capabilities: ['roles.manage'] },
+  { id: 'audit', label: 'Audit trail', path: '/dashboard/audit', capabilities: ['audit.view'] },
   { id: 'diagnostics', label: 'Diagnostics', path: '/dashboard/diagnostics', capabilities: ['diagnostics.view'] },
 ]
 
@@ -118,12 +152,16 @@ export const ROUTE_CAPABILITIES: Record<string, string | string[]> = {
   '/dashboard/applications': 'applications.manage',
   '/dashboard/organogram': 'organogram.view',
   '/dashboard/cms': 'cms.view',
-  '/dashboard/cms/pages': 'cms.view',
-  '/dashboard/cms/seo': 'cms.view',
+  '/dashboard/cms/pages': 'cms.pages.view',
+  '/dashboard/cms/media': 'cms.media.manage',
+  '/dashboard/cms/seo': 'cms.seo.manage',
+  '/dashboard/cms/header': 'cms.header.manage',
+  '/dashboard/cms/footer': 'cms.footer.manage',
   '/dashboard/settings': 'settings.view',
   '/dashboard/settings/email-templates': 'email.templates',
   '/dashboard/users': 'users.manage',
   '/dashboard/roles': 'roles.manage',
+  '/dashboard/audit': 'audit.view',
   '/dashboard/diagnostics': 'diagnostics.view',
 }
 
@@ -131,7 +169,7 @@ export const ROUTE_CAPABILITIES: Record<string, string | string[]> = {
 export const DEFAULT_ROLE_CAPABILITIES: Record<string, string[]> = {
   super_admin: [...ALL_CAPABILITY_KEYS],
   admin: ALL_CAPABILITY_KEYS.filter(
-    (k) => !['diagnostics.view', 'users.manage', 'roles.manage'].includes(k),
+    (k) => !['audit.view', 'diagnostics.view', 'users.manage', 'roles.manage'].includes(k),
   ),
   hr: [
     'dashboard.home',
