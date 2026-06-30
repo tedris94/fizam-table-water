@@ -17,6 +17,7 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_MIGRATING=true tsx scripts/seed.ts",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_MIGRATING=true tsx scripts/migrate.ts",
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_MIGRATING=true tsx scripts/migrate.ts --status",

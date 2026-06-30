@@ -1,5 +1,5 @@
 /* Fizam Table Water — PWA service worker */
-const CACHE_NAME = 'fizam-water-v1'
+const CACHE_NAME = 'fizam-water-v2'
 const PRECACHE_URLS = ['/', '/order', '/dashboard', '/team', '/careers']
 
 self.addEventListener('install', (event) => {
@@ -55,8 +55,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Fizam Water'
   const options = {
     body: data.body || 'You have a new notification',
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/images/pwa-icon-512.png',
+    badge: '/images/favicon-192.png',
     data: data.url || '/',
     actions: [
       { action: 'view', title: 'View Details' },

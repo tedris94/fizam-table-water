@@ -129,6 +129,7 @@ export function buildPageMetadata({
       icon: [
         { url: '/images/favicon-32.png', sizes: '32x32', type: 'image/png' },
         { url: '/images/favicon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/images/pwa-icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
       apple: [{ url: '/images/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
       shortcut: '/images/favicon-32.png',
