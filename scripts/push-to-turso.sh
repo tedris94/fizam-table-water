@@ -87,8 +87,37 @@ done
 echo "    Live DB recreated and loaded from ${LOCAL_DUMP}."
 echo
 
-# --- 5. Output new connection details -------------------------------------
-echo "==> [5/5] New connection details for Vercel:"
+# --- 5. Baseline the migration log ----------------------------------------
+# The local dump comes from a push-mode dev DB, whose payload_migrations log
+# only records the first few migrations even though the dump already contains
+# the FULL current schema. In production Payload runs "pending" migrations on
+# connect, so any unrecorded migration tries to re-create tables that already
+# exist -> "table already exists" build failure on Vercel.
+# Mark every migration file as applied (idempotent) so production skips them.
+echo "==> [5/6] Baselining payload_migrations so production skips existing schema ..."
+BASELINE_SQL="${BACKUP_DIR}/baseline-migrations-${TS}.sql"
+: > "${BASELINE_SQL}"
+for f in src/migrations/*.ts; do
+  name="$(basename "${f}" .ts)"
+  [ "${name}" = "index" ] && continue
+  printf "INSERT INTO payload_migrations (name, batch) SELECT '%s', 1 WHERE NOT EXISTS (SELECT 1 FROM payload_migrations WHERE name = '%s');\n" "${name}" "${name}" >> "${BASELINE_SQL}"
+done
+if [ ! -s "${BASELINE_SQL}" ]; then
+  echo "    WARNING: no migration files found under src/migrations/ — skipping baseline."
+else
+  BASELINED=""
+  for attempt in 1 2 3 4 5; do
+    if turso db shell "${DB_NAME}" < "${BASELINE_SQL}"; then BASELINED="yes"; break; fi
+    echo "    baseline attempt ${attempt} failed — retrying in 5s ..."
+    sleep 5
+  done
+  [ -n "${BASELINED}" ] || { echo "ERROR: migration baseline failed. Apply manually: turso db shell ${DB_NAME} < ${BASELINE_SQL}"; exit 1; }
+  echo "    Migration log baselined ($(grep -c INSERT "${BASELINE_SQL}") migrations marked applied)."
+fi
+echo
+
+# --- 6. Output new connection details -------------------------------------
+echo "==> [6/6] New connection details for Vercel:"
 echo
 echo "DATABASE_URI=$(turso db show "${DB_NAME}" --url)"
 echo -n "DATABASE_AUTH_TOKEN="
